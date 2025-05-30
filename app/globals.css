@@ -1,26 +1,25 @@
+@import url('https://fonts.cdnfonts.com/css/devil-breeze');
+@import url('https://fonts.cdnfonts.com/css/poppins');
+@import url('https://fonts.cdnfonts.com/css/bimbo');
+
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+    margin: 0;
+    font-family: "Montserrat", sans-serif;
+    background-color: #1B1B1B;
+    font-family: 'Poppins', sans-serif;
+    font-size: 14px;
+    background-image:
+        url(/image/bg.png),
+        repeating-linear-gradient(to right, transparent 0 500px, #73814B33 500px 501px);
+    background-size: 100%;
+}
+
+*::-webkit-scrollbar {
+    width: 0;
+}
+
+.devil-breeze{
+    font-family: 'devil breeze', sans-serif;
 }
