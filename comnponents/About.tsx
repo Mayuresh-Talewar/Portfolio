@@ -1,93 +1,76 @@
+'use client'
 import React from 'react'
 import Image from 'next/image'
-import InfinityLogoScrolling from './ui/InfinityLogoScrolling'
-import {
-    SiReact,
-    SiNextdotjs,
-    SiTypescript,
-    SiNodedotjs,
-    SiMongodb,
-    SiTailwindcss,
-    SiJavascript,
-    SiHtml5,
-    SiCss3
-} from 'react-icons/si';
+import { motion } from 'framer-motion'
 
 function About() {
-    const logos = [
-        {
-            icon: <SiReact className="w-12 h-12 text-[#eef8ce] group-hover:text-[#61DAFB] transition-colors duration-300" />,
-            alt: "React"
-        },
-        {
-            icon: <SiNextdotjs className="w-12 h-12 text-[#eef8ce] group-hover:text-white transition-colors duration-300" />,
-            alt: "Next.js"
-        },
-        {
-            icon: <SiTypescript className="w-12 h-12 text-[#eef8ce] group-hover:text-[#3178C6] transition-colors duration-300" />,
-            alt: "TypeScript"
-        },
-        {
-            icon: <SiNodedotjs className="w-12 h-12 text-[#eef8ce] group-hover:text-[#339933] transition-colors duration-300" />,
-            alt: "Node.js"
-        },
-        {
-            icon: <SiMongodb className="w-12 h-12 text-[#eef8ce] group-hover:text-[#47A248] transition-colors duration-300" />,
-            alt: "MongoDB"
-        },
-        {
-            icon: <SiTailwindcss className="w-12 h-12 text-[#eef8ce] group-hover:text-[#06B6D4] transition-colors duration-300" />,
-            alt: "Tailwind CSS"
-        },
-        {
-            icon: <SiJavascript className="w-12 h-12 text-[#eef8ce] group-hover:text-[#F7DF1E] transition-colors duration-300" />,
-            alt: "JavaScript"
-        },
-        {
-            icon: <SiHtml5 className="w-12 h-12 text-[#eef8ce] group-hover:text-[#E34F26] transition-colors duration-300" />,
-            alt: "HTML5"
-        },
-        {
-            icon: <SiCss3 className="w-12 h-12 text-[#eef8ce] group-hover:text-[#1572B6] transition-colors duration-300" />,
-            alt: "CSS3"
-        }
-    ];
-    return (
-        <section className='w-full h-full flex flex-col md:flex-row items-start justify-center py-10 overflow-hidden pb-14 -md:ml-10'>
-            <div className='max-w-[700px] w-full hidden md:block h-full max-h-[700px]'>
-                <Image
-                    src="/image/Mayuresh-photo.png"
-                    alt="Mayuresh Talewar photo"
-                    width={600}
-                    height={600}
-                    className="rounded-full -mt-10 drop-shadow-[0_1px_5px_#eef8ce] w-[75%] md:w-[600px] mx-auto"
-                />
+  return (
+    <section className="w-full flex flex-col md:flex-row justify-center md:gap-10 min-h-screen h-full px-3 py-10">
+      
+      {/* Image Section */}
+      <motion.div
+        initial={{ opacity: 0, x: -100 }}
+        whileInView={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.8 }}
+        viewport={{ once: true }}
+        className="w-fit flex h-full items-start justify-center"
+      >
+        <div className="w-full mb-10 md:pb-0 rounded-lg relative bg-neutral-800 drop-shadow-[0px_1px_5px_#eef8ce] sm:h-72 md:w-[400px] md:h-[400px] lg:w-[500px] lg:h-[600px] flex items-center justify-center overflow-hidden">
+          <Image
+            src="/image/Mayuresh-photo.png"
+            alt="Mayuresh Talewar photo"
+            width={600}
+            height={600}
+            className="z-50 object-cover w-full h-full"
+            priority
+          />
+          <Image
+            src="/image/bg.png"
+            alt="Background"
+            width={600}
+            height={600}
+            className="z-10 absolute top-0 left-0 w-full h-full"
+            priority
+          />
+        </div>
+      </motion.div>
 
-            </div>
-            <div className='md:w-1/2 w-full px-5 h-full  md:pt-10 flex flex-col gap-4 items-start justify-end'>
-                <div className="flex flex-col gap-2 h-full ">
-                    <h1 className=' text-4xl font-bold text-[#eef8ce]'>About Me</h1>
-                    <p className='text-white md:text-lg text-sm'>
-                        I am a <span className='text-[#eef8ce]'>MERN Stack Developer</span>  with practical experience building fast, user-friendly, and scalable web applications using MongoDB, Express.js, React.js, and
-                        Node.js. I’ve worked on multiple real-world projects, delivering clean UI/UX and performance-optimized features that improved user retention and
-                        engagement. Skilled in RESTful API integration, reusable component design, and agile teamwork — I thrive in fast-paced startup environments where
-                        shipping high-quality features matters.
-                    </p>
-                </div>
+      {/* Text Content */}
+      <motion.div
+        initial={{ opacity: 0, x: 100 }}
+        whileInView={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.8, delay: 0.2 }}
+        viewport={{ once: true }}
+        className="w-full max-w-[800px] md:mt-5 px-2 sm:px-5 h-full md:pt-10 flex flex-col gap-4 items-center justify-start tracking-wide"
+      >
+        <div className="flex flex-col items-start justify-start gap-2 h-full border-b-2 pb-5 border-[#eef8ce]">
+          <h1 className="sm:text-2xl text-lg text-[#eef8ce]">Who am I?</h1>
+          <p className="text-white sm:text-4xl text-xl leading-8 sm:leading-12 font-semibold">
+            I'm Mayuresh Talewar, a Full Stack Developer (MERN Stack).
+          </p>
+          <p className="text-white text-sm sm:text-base font-thin sm:leading-8 leading-6">
+            I build fast, scalable web apps using MongoDB, Express, React, and Node.js. I've worked on platforms for farmers and businesses, and I’m skilled in REST APIs, JWT, Tailwind CSS, and Redux. I enjoy writing reusable components, optimizing performance, and leading development teams. I'm open to freelance or full-time roles where I can create impactful digital solutions.
+          </p>
+        </div>
 
-                <div className="flex flex-col w-full gap-2 mt-6 h-full overflow-hidden bg-[#1a1a1a] p-4 rounded-lg shadow-[0_1px_5px_#eef8ce]">
-                    <h1 className='text-4xl font-bold text-[#eef8ce]'>Skills</h1>
-                    <div className="flex flex-row gap-2">
-                        <p className='text-white md:text-lg text-sm'>MongoDB, Express.js, React.js, Node.js, Tailwind CSS, Bootstrap, JavaScript, TypeScript, Git, GitHub.</p>
-                    </div>
-                    <div className='max-w-[750px] overflow-hidden  md:mt-0 w-full'>
-                        <InfinityLogoScrolling logos={logos} speed={30} />
-                    </div>
-                </div>
-               
-            </div>
-        </section>
-    )
+        <div className="w-full py-5 flex flex-col items-center sm:items-start">
+  <ul className="text-white w-full grid grid-cols-1 sm:grid-cols-2 text-sm sm:text-base font-thin sm:leading-8 leading-6 gap-y-4 gap-x-8">
+    <li className="flex flex-row gap-2"><strong>Name:</strong> Mayuresh Talewar</li>
+    <li className="flex flex-row gap-2"><strong>From:</strong> Nagpur, Maharashtra, India</li>
+    <li className="flex flex-row gap-2"><strong>Age:</strong> 23</li>
+    <li className="flex flex-row gap-2"><strong>Email:</strong> mtalewar2002@gmail.com</li>
+  </ul>
+
+  <div className="w-full flex justify-start ">
+    <button className="bg-[#eef8ce] text-black cursor-pointer px-6 py-2 mt-8 text-lg rounded-[2px] hover:bg-[#dbe8a5] transition">
+      Contact Me
+    </button>
+  </div>
+</div>
+
+      </motion.div>
+    </section>
+  )
 }
 
 export default About

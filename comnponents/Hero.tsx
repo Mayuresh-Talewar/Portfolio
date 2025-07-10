@@ -64,18 +64,19 @@ const logos = [
 
 const Hero: React.FC = () => {
     return (
-        <section className="flex flex-col items-center justify-center w-full min-h-screen ">
+        <section className="flex flex-col items-center justify-center w-full  min-h-screen ">
             {/* <TypewriterEffect  words={words} />
            */}
-            <div className='flex flex-col items-start justify-center text-start w-full overflow-hidden  max-w-screen gap-4 '>
+            <div className='flex flex-col items-start justify-center text-start w-full  max-w-screen gap-4 '>
                 <div className="flex flex-col sm:flex-row items-start sm:items-center md:pl-5 gap-2 sm:gap-3">
-                    <h1 className='text-white text-4xl md:text-7xl font-bold'>I'm</h1>
-                    <h1 className='text-white text-4xl md:text-7xl font-bold bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text '>Mayuresh</h1>
-                    <h1 className='text-white text-4xl md:text-7xl font-bold bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text '>Talewar</h1>
+                    <h1 className='text-white text-2xl md:text-5xl font-bold'>Hi There!</h1>
                 </div>
-                <div className="w-full">
-                    <ContainerTextFlip words={ROLES} />
+                <div className="md:pl-5 w-full flex  md:flex-row flex-col md:gap-3  group-hover:text-[#61DAFB] transition-colors duration-300">
+                  <p className='md:text-8xl text-4xl text-start font-black text-white'>I am </p><ContainerTextFlip words={ROLES} />
                 </div>
+                <p className='text-white text-sm sm:text-base md:ml-5  w-full max-w-[800px]'>
+                    Turning ideas into responsive, fast, and scalable digital products using React, Node, and MongoDB.
+                </p>
                 <div className="flex flex-col h-full w-full md:flex-row items-center justify-start gap-5 pt-4 md:pl-5 sm:gap-3">
                     <div className="flex flex-row w-full max-w-[350px] items-center justify-between md:mr-10">
 

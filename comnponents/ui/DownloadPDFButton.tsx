@@ -29,9 +29,9 @@ const DownloadPDFButton: React.FC = () => {
         <button
             onClick={handleDownload}
             disabled={isLoading}
-            className="w-40 h-10 rounded-xl cursor-pointer bg-white text-black border border-black text-sm hover:bg-gray-100 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-40 h-10 rounded-xl cursor-pointer bg-[#eef8ce] text-black border border-black text-sm hover:bg-gray-100 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-            {isLoading ? 'Downloading...' : 'Download Resume'}
+            {isLoading ? 'Downloading...' : 'Download CV'}
         </button>
     );
 };

@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { FloatingDock } from "@/comnponents/ui/floating-dock";
+
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -23,12 +25,23 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
+    <>
+      
+      <div className="flex sticky top-5  items-center z-50 justify-center w-full">
+      <FloatingDock
+        mobileClassName="translate-y-20" // only for demo, remove for production
+       
+      />
+    </div>
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+        >
+          
+        
         {children}
       </body>
     </html>
+    </>
   );
 }
