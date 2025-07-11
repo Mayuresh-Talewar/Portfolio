@@ -55,10 +55,10 @@ function About() {
 
         <div className="w-full py-5 flex flex-col items-center sm:items-start">
   <ul className="text-white w-full grid grid-cols-1 sm:grid-cols-2 text-sm sm:text-base font-thin sm:leading-8 leading-6 gap-y-4 gap-x-8">
-    <li className="flex flex-row gap-2"><strong>Name:</strong> Mayuresh Talewar</li>
-    <li className="flex flex-row gap-2"><strong>From:</strong> Nagpur, Maharashtra, India</li>
-    <li className="flex flex-row gap-2"><strong>Age:</strong> 23</li>
-    <li className="flex flex-row gap-2"><strong>Email:</strong> mtalewar2002@gmail.com</li>
+    <li className="flex flex-row gap-2 font-thin "><strong>Name:</strong> Mayuresh Talewar</li>
+    <li className="flex flex-row gap-2 font-thin"><strong>From:</strong> Nagpur, Maharashtra, India</li>
+    <li className="flex flex-row gap-2 font-thin"><strong>Age:</strong> 23</li>
+    <li className="flex flex-row gap-2 font-thin"><strong>Email:</strong> mtalewar2002@gmail.com</li>
   </ul>
 
   <div className="w-full flex justify-start ">
