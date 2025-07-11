@@ -18,7 +18,7 @@ export default function Home() {
       <div className="flex w-full flex-col mx-auto items-center  -mt-14 sm:px-10 px-3 overflow-hidden ">
         <Hero />
         <About />
-        <HoverEffect />
+        <HoverEffect  />
         <FloatSkills/>
         <HeroParallax />
           <div className="">

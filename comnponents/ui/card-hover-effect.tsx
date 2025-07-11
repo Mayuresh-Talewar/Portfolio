@@ -47,11 +47,7 @@ const items = [
 export const HoverEffect = ({
   className,
 }: {
-  items: {
-    title: string;
-    description: string;
-    link: string;
-  }[];
+ 
   className?: string;
 }) => {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
@@ -76,8 +72,7 @@ export const HoverEffect = ({
     >
       
       {items.map((item, idx) => (
-        <a
-          href={item?.link}
+        <div
           key={idx}
           className="relative group  block p-2 h-full w-full"
           onMouseEnter={() => setHoveredIndex(idx)}
@@ -107,7 +102,7 @@ export const HoverEffect = ({
             <DuractionTitle>{item.duraction}</DuractionTitle>
             <CardDescription>{item.description}</CardDescription>
           </Card>
-        </a>
+        </div>
       ))}
       </div>
           </div>
