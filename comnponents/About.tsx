@@ -1,11 +1,15 @@
 'use client'
-import React from 'react'
+import React, { useState } from 'react'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
+import CustomModal from './ui/CustomModal';
+import { SignupFormDemo } from './Contact';
 
 function About() {
+    const [modalIsOpen, setModalIsOpen] = useState(false);
+
   return (
-    <section className="w-full flex flex-col md:flex-row justify-center md:gap-10 min-h-screen h-full px-3 py-10">
+    <section className="w-full flex flex-col md:flex-row justify-center md:gap-10  h-full px-3 py-10">
       
       {/* Image Section */}
       <motion.div
@@ -13,11 +17,11 @@ function About() {
         whileInView={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.8 }}
         viewport={{ once: true }}
-        className="w-fit flex h-full items-start justify-center"
+        className="w-fit  h-full items-start justify-center hidden lg:flex"
       >
         <div className="w-full mb-10 md:pb-0 rounded-lg relative bg-neutral-800 drop-shadow-[0px_1px_5px_#eef8ce] sm:h-72 md:w-[400px] md:h-[400px] lg:w-[500px] lg:h-[600px] flex items-center justify-center overflow-hidden">
           <Image
-            src="/image/Mayuresh-photo.png"
+            src="/image/mt.png"
             alt="Mayuresh Talewar photo"
             width={600}
             height={600}
@@ -61,11 +65,17 @@ function About() {
     <li className="flex flex-row gap-2 font-thin"><strong>Email:</strong> mtalewar2002@gmail.com</li>
   </ul>
 
-  <div className="w-full flex justify-start ">
-    <button className="bg-[#eef8ce] text-black cursor-pointer px-6 py-2 mt-8 text-lg rounded-[2px] hover:bg-[#dbe8a5] transition">
-      Contact Me
-    </button>
-  </div>
+ <div className="w-full flex justify-start ">
+        <button
+          className="bg-[#eef8ce] text-black cursor-pointer px-6 py-2 mt-8 text-lg rounded-[2px] hover:bg-[#dbe8a5] transition"
+          onClick={() => setModalIsOpen(true)}
+        >
+          Contact Me
+        </button>
+        <CustomModal isOpen={modalIsOpen} onClose={() => setModalIsOpen(false)}>
+          <SignupFormDemo />
+        </CustomModal>
+      </div>
 </div>
 
       </motion.div>

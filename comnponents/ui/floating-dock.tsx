@@ -30,14 +30,14 @@ const items = [
     icon: (
       <IconHome className="h-full w-full  text-neutral-700" />
     ),
-    href: "#",
+    href: "/",
   },
   {
     title: "GitHub",
     icon: (
       <IconBrandGithub className="h-full w-full  text-neutral-700" />
     ),
-    href: "#",
+    href: "https://github.com/mayuresh-talewar",
   },
 ];
 

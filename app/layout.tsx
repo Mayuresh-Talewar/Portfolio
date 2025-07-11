@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { FloatingDock } from "@/comnponents/ui/floating-dock";
+import Footer from "@/comnponents/Footer";
 
 
 const geistSans = Geist({
@@ -35,13 +36,14 @@ export default function RootLayout({
     </div>
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-        >
-          
-        
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         {children}
       </body>
-    </html>
+      </html>
+    
+      
+      <Footer/>
+
     </>
   );
 }
