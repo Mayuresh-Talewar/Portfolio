@@ -67,7 +67,7 @@ const InfinityLogoScrolling: React.FC<InfinityLogoScrollingProps> = ({
     const duplicatedLogos = [...logos, ...logos, ...logos, ...logos];
 
     return (
-        <div className="w-full    bg-transparent">
+        <div className="w-full backdrop-blur-md   bg-transparent">
             <motion.div
                 className="flex gap-12 "
                 animate={{

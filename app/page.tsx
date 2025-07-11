@@ -8,6 +8,7 @@ import { HoverEffect } from "@/comnponents/ui/card-hover-effect";
 import React from "react";
 import FloatSkills from "@/comnponents/ui/FloatSkills";
 import InfinityLogoScrolling from "@/comnponents/ui/InfinityLogoScrolling";
+import Education from "@/comnponents/Education";
 
 Modal.setAppElement("body");
 
@@ -21,7 +22,8 @@ export default function Home() {
         <HoverEffect  />
         <FloatSkills/>
         <HeroParallax />
-          <div className="">
+        <Education/>
+          <div className="mt-10">
         <InfinityLogoScrolling speed={30} />
         </div>
 

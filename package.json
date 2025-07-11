@@ -12,6 +12,7 @@
     "@radix-ui/react-label": "^2.1.7",
     "@tabler/icons-react": "^3.34.0",
     "clsx": "^2.1.1",
+    "emailjs-com": "^3.2.0",
     "framer-motion": "^12.23.3",
     "motion": "^12.23.3",
     "next": "15.3.3",
