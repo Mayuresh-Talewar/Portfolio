@@ -30,7 +30,6 @@ export default function RootLayout({
       
       <div className="flex sticky top-5  items-center z-50 justify-center w-full">
       <FloatingDock
-        mobileClassName="translate-y-20" // only for demo, remove for production
        
       />
     </div>
