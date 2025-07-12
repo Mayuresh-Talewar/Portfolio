@@ -6,26 +6,27 @@ import { SiReact, SiMongodb, SiNodedotjs, SiGithub, SiDocker, SiJavascript, SiTy
 const educationData = [
   {
     degree: "Bachelor of Technology (B.Tech) in Computer Science",
-    institution: "Rashtrasant Tukadoji Maharaj Nagpur University",
-    year: "2021 - 2025",
-    location: "Nagpur, Maharashtra, India",
+    institution: "GH Raisoni University",
+    year: "Jan 2021 – Mar 2024",
+    location: "Borgaon, Madhya Pradesh, India",
     icon: <FaUniversity className="text-[#eef8ce] text-2xl mr-3" />,
   },
   {
-    degree: "Diploma in Computer Engineering",
-    institution: "ABC Polytechnic College",
-    year: "2018 - 2021",
+    degree: "Diploma in Computer Science",
+    institution: "Anjuman Polytechnic",
+    year: "Jan 2018 – Mar 2020",
     location: "Nagpur, Maharashtra, India",
     icon: <FaGraduationCap className="text-[#eef8ce] text-2xl mr-3" />,
   },
-  {
-    degree: "Secondary School (10th)",
-    institution: "XYZ High School",
-    year: "2017 - 2018",
+   {
+    degree: "Secondary School Certificate (SSC)",
+    institution: "SFS High School and Junior College",
+    year: "2005 – 2017", // KG to 10th (SSC)
     location: "Nagpur, Maharashtra, India",
     icon: <FaSchool className="text-[#eef8ce] text-2xl mr-3" />,
   },
 ];
+
 
 const floatLogos = [
   { icon: <SiReact />, color: "#eef8ce" },
@@ -63,7 +64,7 @@ export default function Education() {
   }, []);
 
   return (
-    <section className="relative w-full flex justify-center items-center mb-26 md:mb-10 md:-mt-18 mt-26  h-[600px]">
+    <section className="relative w-full flex justify-center  items-center mb-26 md:mb-10 md:-mt-18 mt-26  h-[600px]">
       {/* Floating tech logos outside the card */}
       <div className="absolute w-[120%] h-[120%] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-0">
         {positions.map((pos, idx) => (

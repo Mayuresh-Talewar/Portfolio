@@ -130,7 +130,7 @@ export const HeroParallax = () => {
 export const Header = () => {
   return (
     <div className="max-w-7xl  mx-auto py-10  text-center flex flex-wrap flex-col md:py-32 px-2 sm:px-4 w-full ">
-   <h1 className="text-5xl  md:text-7xl w-full leading-18 font-bold dark:text-white ">
+   <h1 className="text-5xl  md:text-7xl w-full leading-18 font-bold dark:text-[#eef8ce] ">
   Featured  Work
 </h1>
 <p className="text-wrap  max-w-[1000px] w-full  mx-auto  text-center  text-sm sm:text-base md:text-xl font-light mt-4 sm:mt-6 md:mt-8 dark:text-white">
