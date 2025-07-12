@@ -45,7 +45,7 @@ export const FloatingDock = ({
     {
       title: "LinkedIn",
       icon: <IconBrandLinkedin className="h-full w-full text-neutral-700" />,
-      href: "https://www.linkedin.com/in/mayuresh-talewar/",
+      href: "https://www.linkedin.com/in/mayuresh-talewar-06242223a/",
     },
   ];
 

@@ -28,7 +28,7 @@ const Footer = () => {
             <FaGithub size={20} />
           </a>
           <a
-            href="https://linkedin.com/in/mayuresh-talewar"
+            href="https://www.linkedin.com/in/mayuresh-talewar-06242223a/"
             target="_blank"
             rel="noopener noreferrer"
             className="hover:text-[#eef8ce] transition-colors"
@@ -36,15 +36,7 @@ const Footer = () => {
           >
             <FaLinkedin size={20} />
           </a>
-          <a
-            href="https://twitter.com/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-[#eef8ce] transition-colors"
-            aria-label="Twitter"
-          >
-            <FaTwitter size={20} />
-          </a>
+          
           <a
             href="mailto:mtalewar2002@gmail.com"
             className="hover:text-[#eef8ce] transition-colors"
