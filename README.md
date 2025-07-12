@@ -1,39 +1,35 @@
-# 🚧 Mayuresh Talewar – Portfolio (In Development)
+# 💼 Personal Developer Portfolio
 
-This repository contains the source code for my **personal portfolio website**, built using **Next.js**, **TypeScript**, and **Tailwind CSS**. This project will showcase my skills, experience, and featured projects as a frontend developer.
+Welcome to my **Developer Portfolio Website** – a showcase of my journey, skills, and projects as a Full Stack Web Developer.
 
----
+🔗 **Live Site**: [portfolio-delta-rouge-21.vercel.app](https://portfolio-delta-rouge-21.vercel.app)
 
-## ⚙️ Tech Stack
+## 📌 About
 
-- **Framework:** [Next.js](https://nextjs.org/)
-- **Language:** [TypeScript](https://www.typescriptlang.org/)
-- **Styling:** [Tailwind CSS](https://tailwindcss.com/)
+This portfolio is built to highlight my work, technical abilities, and experience in web development. It includes:
+- A detailed introduction about me
+- Skills and technologies I work with
+- Featured projects with live links
+- My education and certifications
+- Contact information
 
----
+## 🛠️ Tech Stack
 
-## 📌 Project Status
+- **Frontend**: React.js, HTML5, CSS3, JavaScript (ES6+)
+- **Backend**: Node.js, Express.js
+- **Database**: MongoDB
+- **Tools**: Git, GitHub, Figma, Visual Studio Code
+- **Deployment**: Vercel
 
-🚧 **Currently in Development**  
-New pages, components, and animations are being added frequently.
+## 📸 Preview
 
----
+![Portfolio Preview](./path-to-your-screenshot.png)
 
-## 🧰 Getting Started
+## 🚀 Getting Started
 
-To run this project locally:
+To run the project locally:
 
-```bash
-# Clone the repository
-git clone https://github.com/mayur20022/Portfolio.git
-
-# Navigate into the project directory
-cd your-repo-name
-
-# Install dependencies
-npm install
-
-# Run the development server
-npm run dev
-
-# Open http://localhost:3000 to view it in the browser
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/yourusername/your-repo-name.git
+   cd your-repo-name
