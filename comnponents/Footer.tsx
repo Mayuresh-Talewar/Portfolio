@@ -17,7 +17,7 @@ const Footer = () => {
         </span>
 
         {/* Socials + Contact */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4"> 
           <a
             href="https://github.com/mayuresh-talewar"
             target="_blank"
