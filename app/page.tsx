@@ -1,5 +1,7 @@
 "use client";
 
+// import { ThreeDMarqueeDemo } from "./Card";
+
 import Hero from "@/comnponents/Hero";
 import Modal from "react-modal";
 import About from "@/comnponents/About";
@@ -27,9 +29,11 @@ export default function Home() {
         <InfinityLogoScrolling speed={30} />
         </div>
 
-        {/* Button to open modal */}
        
       </div>
+
+      {/* <ThreeDMarqueeDemo/> */}
+      
     </main>
   );
 }
