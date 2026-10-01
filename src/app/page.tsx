@@ -1,7 +1,7 @@
 import { chapters, parts, stats } from "@/data/chapters";
 import { projects } from "@/data/projects";
 import { siteConfig } from "@/data/site";
-import { skills } from "@/data/skills";
+import { signatures, skills } from "@/data/skills";
 import { ChapterHeader } from "@/components/chapter-header";
 import { ChapterNav, type NavItem } from "@/components/chapter-nav";
 import { ChapterSpread } from "@/components/chapter-spread";
@@ -12,7 +12,7 @@ import { Intro } from "@/components/motion/intro";
 import { ProjectCard } from "@/components/project-card";
 import { Section } from "@/components/section";
 import { SiteFooter } from "@/components/site-footer";
-import { SkillGroup } from "@/components/skill-group";
+import { StatusBoard } from "@/components/skill-group";
 import { WantedPoster } from "@/components/wanted-poster";
 import { cn } from "@/lib/utils";
 
@@ -204,11 +204,7 @@ export default function Home() {
                 </p>
               </div>
               {status.intro && <p className="mb-8 max-w-[60ch] text-lg text-paper/90">{status.intro}</p>}
-              <div className="columns-1 gap-4 md:columns-2 lg:columns-3">
-                {skills.map((g) => (
-                  <SkillGroup key={g.name} group={g} />
-                ))}
-              </div>
+              <StatusBoard signatures={signatures} groups={skills} />
             </div>
           </div>
         </Section>

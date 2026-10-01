@@ -361,3 +361,75 @@ section[data-mode] {
     --cut: 1.25rem;
   }
 }
+
+/* DEV-C: chapter layout variants, Ch.5 bento numerals, Status Window lines ---------- */
+/* Square cut panel (tiers): keeps the ink-border pseudo pair without a slant. */
+.cut-sq {
+  --shape: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+}
+/* Versus split: two cut panels share one slash. Mobile = stacked panels nesting on the same slant. */
+.vs-l {
+  --shape: polygon(0 0, 100% 0, 100% calc(100% - var(--cut)), 0 100%);
+}
+.vs-r {
+  --shape: polygon(0 var(--cut), 100% 0, 100% 100%, 0 100%);
+  margin-top: calc(var(--cut) * -1);
+}
+@media (min-width: 48rem) {
+  .vs-l,
+  .vs-r {
+    --slash: 5.5rem;
+  }
+  .vs-l {
+    --shape: polygon(0 0, 100% 0, calc(100% - var(--slash)) 100%, 0 100%);
+  }
+  .vs-r {
+    --shape: polygon(var(--slash) 0, 100% 0, 100% 100%, 0 100%);
+    margin-top: 0;
+    /* grid gap is 1.25rem: pull left so the two slants run parallel ~14px apart */
+    margin-left: calc(-1 * (var(--slash) + 0.375rem));
+    padding-left: calc(var(--slash) + 1rem);
+  }
+}
+.splash-rays {
+  mask-image: linear-gradient(to bottom, #000 55%, transparent);
+}
+.tone-panel {
+  background-image: radial-gradient(circle, rgb(26 22 18 / 0.14) 0.9px, transparent 1.4px);
+  background-size: 7px 7px;
+}
+.bento-tone {
+  mask-image: radial-gradient(circle at 100% 0, #000, transparent 70%);
+}
+.bento-num {
+  -webkit-text-stroke: 0.04em var(--color-ink);
+  paint-order: stroke fill;
+  text-shadow: 0.05em 0.05em 0 var(--color-ink);
+}
+.skill-line li {
+  display: inline;
+}
+/* nbsp keeps the slash on the previous skill's line; the trailing space is the break point */
+.skill-line li:not(:last-child)::after {
+  content: "\00a0/ ";
+  color: var(--color-straw);
+  opacity: 0.6;
+}
+/* Status rows type on as they enter (scroll-driven, no JS). Reduced motion / no support = static. */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .status-row {
+      animation: status-type linear both;
+      animation-timeline: view();
+      animation-range: entry 10% entry 70%;
+    }
+  }
+}
+@keyframes status-type {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}

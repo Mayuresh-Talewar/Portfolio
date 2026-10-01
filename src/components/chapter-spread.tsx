@@ -7,26 +7,58 @@ import { GearFive } from "./motion/gear-five";
 import { StatList } from "./stat-list";
 
 const PRODUCT_LAYOUT = [
-  { span: "md:col-span-4", bg: "var(--color-straw)", fg: "var(--color-ink)" },
-  { span: "md:col-span-2", bg: "var(--color-jolly)", fg: "var(--color-paper)" },
-  { span: "md:col-span-2", bg: "var(--color-paper)", fg: "var(--color-ink)" },
-  { span: "md:col-span-4", bg: "var(--color-sea)", fg: "var(--color-paper)" },
+  { span: "md:col-span-4", bg: "var(--color-straw)", fg: "var(--color-ink)", num: "var(--color-jolly)" },
+  { span: "md:col-span-2", bg: "var(--color-jolly)", fg: "var(--color-paper)", num: "var(--color-straw)" },
+  { span: "md:col-span-2", bg: "var(--color-paper)", fg: "var(--color-ink)", num: "var(--color-jolly)" },
+  { span: "md:col-span-4", bg: "var(--color-sea)", fg: "var(--color-paper)", num: "var(--color-straw)" },
 ];
+
+/*
+ * Composition per `chapter.layout` (one component, class variants only):
+ * classic = title panel (8) + offset captions (4) + record/bursts, mirrored on even chapters.
+ * splash  = boxless title on rays across the full width, record panel overlapping its bottom edge.
+ * tiers   = three vertical panels 2fr/1fr/1fr (title, narration, record) stepping down like stairs.
+ * versus  = title panel and a red stats panel sharing one diagonal slash, captions + record below.
+ */
+const TITLE = {
+  classic: "cut col-span-12 md:col-span-8",
+  splash: "col-span-12 min-h-[24rem] md:min-h-[36rem]",
+  tiers: "cut cut-sq col-span-12 md:col-span-6",
+  versus: "cut vs-l col-span-12 md:col-span-7",
+};
+const NARRATION = {
+  classic: "-mt-10 px-3 md:col-span-4 md:mt-10 md:px-0",
+  splash: "-mt-4 px-3 md:col-span-6 md:px-0",
+  tiers: "panel tone-panel justify-between p-4 md:col-span-3 md:mt-12 md:p-5",
+  versus: "-mt-8 px-3 md:col-span-4 md:-mt-12 md:px-0",
+};
+const RECORD = {
+  classic: "col-span-12",
+  splash: "col-span-12 md:col-span-5 md:col-start-8 md:-mt-44 shadow-[8px_8px_0_var(--color-ink)]",
+  tiers: "col-span-12 flex flex-col md:col-span-3 md:mt-24",
+  versus: "col-span-12 md:col-span-8",
+};
 
 /** One chapter = one spread: a dominant "island arrival" title panel, narration, and the record. */
 export function ChapterSpread({ chapter: c, projects }: { chapter: Chapter; projects: Project[] }) {
   const climax = c.gear === 5;
-  const flip = !climax && c.number % 2 === 0;
-  const thin = !c.metrics && !c.products;
+  const layout = c.layout ?? "classic";
+  const classic = layout === "classic";
+  const flip = classic && !climax && c.number % 2 === 0;
+  const wide = classic && !c.metrics;
   const titleId = `${c.id}-title`;
 
   const record = (
-    <article data-panel className={cn("panel p-5 md:p-7", !thin && "col-span-12", !thin && (c.metrics ? "md:col-span-8" : "md:col-span-12"), flip && !thin && "md:col-start-5")}>
+    <article
+      data-panel
+      className={cn("panel relative z-10 p-5 md:p-7", RECORD[layout], classic && (c.metrics ? "md:col-span-8" : "md:col-span-12"), flip && "md:col-start-5")}
+      style={layout === "tiers" ? ({ "--panel-bg": "var(--color-ink)", "--panel-fg": "var(--color-paper)", "--spot-text": "var(--color-paper)", "--spot": "var(--color-paper)" } as React.CSSProperties) : undefined}
+    >
       <h3 className="font-display text-xl leading-tight uppercase md:text-2xl">{c.role}</h3>
       <p className="mt-1 font-bold [font-stretch:85%]" style={{ color: "var(--spot-text)" }}>
         {c.org}, {c.location}
       </p>
-      <ul className={cn("mt-4 grid max-w-[72ch] gap-3", !thin && !c.metrics && "max-w-none md:grid-cols-2 md:gap-x-10")}>
+      <ul className={cn("mt-4 grid max-w-[72ch] gap-3", wide && "max-w-none md:grid-cols-2 md:gap-x-10", layout === "tiers" && "mt-auto pt-6")}>
         {c.highlights.map((h) => (
           <li key={h} className="relative pl-6 leading-relaxed">
             <span aria-hidden className="absolute top-[0.55em] left-0 size-2.5 rotate-45" style={{ background: "var(--spot)" }} />
@@ -61,6 +93,11 @@ export function ChapterSpread({ chapter: c, projects }: { chapter: Chapter; proj
           <div aria-hidden className="flood-layer absolute inset-0 -z-10 bg-sea">
             <div className="rays absolute inset-0 opacity-90" style={{ "--ray-a": "#13679f", "--ray-b": "#0f5c93", "--sx": "50%", "--sy": "16%" } as React.CSSProperties} />
             <div className="tone absolute inset-0 opacity-20" style={{ "--tone-ink": "#9fd8f2" } as React.CSSProperties} />
+          </div>
+        ) : layout === "splash" ? (
+          <div aria-hidden className="splash-rays absolute inset-0 -z-10">
+            <div className="rays absolute inset-0" style={{ "--ray-a": "var(--color-paper)", "--ray-b": "var(--color-newsprint)", "--sx": "34%", "--sy": "42%" } as React.CSSProperties} />
+            <div className="tone tone-fade absolute inset-x-0 top-0 h-1/2 opacity-[0.12]" />
           </div>
         ) : undefined
       }
@@ -100,16 +137,17 @@ export function ChapterSpread({ chapter: c, projects }: { chapter: Chapter; proj
           data-arrival
           data-gear={c.gear}
           className={cn(
-            "cut flood-ink col-span-12 flex flex-col justify-end p-6 pb-12 md:p-10 md:pb-16",
-            "min-h-[29rem]",
-            "md:col-span-8 md:min-h-[37rem]",
+            "flood-ink relative flex flex-col justify-end p-6 pb-12 md:p-10 md:pb-16",
+            "min-h-[29rem] md:min-h-[37rem]",
+            TITLE[layout],
             climax && "cut-b",
-            flip ? "cut-d md:col-start-5 md:row-start-1" : !climax && "cut-a",
+            flip ? "cut-d md:col-start-5 md:row-start-1" : classic && !climax && "cut-a",
+            layout === "splash" && "px-0 md:px-0",
           )}
           style={{ "--panel-bg": climax ? "var(--color-straw)" : "var(--color-paper)" } as React.CSSProperties}
         >
           <ArrivalFx gear={c.gear} />
-          <div aria-hidden className="pointer-events-none absolute inset-[3px] overflow-hidden">
+          <div aria-hidden className={cn("pointer-events-none absolute overflow-hidden", layout === "splash" ? "inset-0" : "inset-[3px]")}>
             <div
               data-lines
               className="speedlines absolute -inset-1/4 opacity-[0.16]"
@@ -176,11 +214,27 @@ export function ChapterSpread({ chapter: c, projects }: { chapter: Chapter; proj
           </p>
         </div>
 
+        {/* Versus: the red half shares the title panel's slash and carries the bursts. */}
+        {layout === "versus" && c.metrics && (
+          <div
+            className="cut vs-r col-span-12 grid place-items-center px-3 py-12 md:col-span-5 md:py-10"
+            style={{ "--panel-bg": "var(--spot)", "--panel-fg": "var(--color-paper)" } as React.CSSProperties}
+          >
+            <div aria-hidden className="pointer-events-none absolute inset-[3px] overflow-hidden">
+              <div className="speedlines absolute -inset-1/4 opacity-25" style={{ "--lines": "var(--color-ink)", "--sx": "55%", "--sy": "50%" } as React.CSSProperties} />
+            </div>
+            <div className="relative" style={{ "--spot": "var(--color-ink)" } as React.CSSProperties}>
+              <StatList stats={c.metrics} />
+            </div>
+          </div>
+        )}
+
         {/* Narration column */}
         <div
           className={cn(
             // Captions break the panel edge (manga lettering overlaps the art, reset note 3).
-            "relative z-10 col-span-12 -mt-10 flex flex-col gap-4 px-3 md:col-span-4 md:mt-10 md:px-0",
+            "relative z-10 col-span-12 flex flex-col gap-4",
+            NARRATION[layout],
             flip && "md:col-start-1 md:row-start-1",
           )}
         >
@@ -190,8 +244,9 @@ export function ChapterSpread({ chapter: c, projects }: { chapter: Chapter; proj
               data-caption
               className={cn(
                 "caption text-[0.95rem] md:text-base",
-                i % 2 ? "md:rotate-[0.8deg]" : "md:-rotate-[0.8deg]",
-                flip ? (i % 2 ? "md:-mr-6" : "md:-mr-16") : i % 2 ? "md:-ml-6" : "md:-ml-16",
+                layout !== "tiers" && (i % 2 ? "md:rotate-[0.8deg]" : "md:-rotate-[0.8deg]"),
+                classic && (flip ? (i % 2 ? "md:-mr-6" : "md:-mr-16") : i % 2 ? "md:-ml-6" : "md:-ml-16"),
+                layout === "splash" && i % 2 && "md:ml-16",
               )}
             >
               {line}
@@ -209,18 +264,13 @@ export function ChapterSpread({ chapter: c, projects }: { chapter: Chapter; proj
               </span>
             </div>
           )}
-          {thin && record}
         </div>
 
-        {!thin && (
-          <>
-            {record}
-            {c.metrics && (
-              <div className={cn("col-span-12 grid place-items-center md:col-span-4", flip && "md:col-start-1 md:row-start-2")}>
-                <StatList stats={c.metrics} />
-              </div>
-            )}
-          </>
+        {record}
+        {c.metrics && classic && (
+          <div className={cn("col-span-12 grid place-items-center md:col-span-4", flip && "md:col-start-1 md:row-start-2")}>
+            <StatList stats={c.metrics} />
+          </div>
         )}
 
         {c.products && (
@@ -231,11 +281,20 @@ export function ChapterSpread({ chapter: c, projects }: { chapter: Chapter; proj
                 <li
                   key={p.title}
                   data-panel
-                  className={cn("panel flex flex-col gap-3 p-5 md:p-7", l.span)}
+                  className={cn("panel flex flex-col gap-3 overflow-hidden p-5 md:p-7", l.span)}
                   style={{ "--panel-bg": l.bg, "--panel-fg": l.fg } as React.CSSProperties}
                 >
+                  <span aria-hidden className="bento-tone tone absolute top-0 right-0 -z-10 size-40 opacity-30" />
                   <h3 className="font-display text-2xl leading-none uppercase md:text-3xl">{p.title}</h3>
-                  <p className="leading-relaxed">{p.description}</p>
+                  <p className="max-w-[62ch] leading-relaxed">{p.description}</p>
+                  {p.metric && (
+                    <p className="mt-auto flex flex-wrap items-end justify-end gap-x-3 pt-4 text-right">
+                      <span className="max-w-[20ch] pb-1 text-sm leading-tight font-bold uppercase [font-stretch:85%]">{p.metric.label}</span>
+                      <span className="bento-num font-display text-[clamp(3rem,6vw,5.5rem)] leading-[0.85]" style={{ color: l.num }}>
+                        {p.metric.value}
+                      </span>
+                    </p>
+                  )}
                 </li>
               );
             })}
