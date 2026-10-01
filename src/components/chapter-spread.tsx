@@ -122,7 +122,7 @@ export function ChapterSpread({ chapter: c, projects }: { chapter: Chapter; proj
             >
               GEAR {c.gear}
             </p>
-            {c.gearCaption && <p className="gear-line caption mt-6 max-w-[34ch] text-base md:text-lg">{c.gearCaption}</p>}
+            {c.gearCaption && <p className="gear-line caption mt-6 max-w-[min(34ch,calc(100vw-2rem))] text-base md:text-lg">{c.gearCaption}</p>}
           </div>
           {c.sfx?.map((s, i) => (
             <span
@@ -148,7 +148,7 @@ export function ChapterSpread({ chapter: c, projects }: { chapter: Chapter; proj
             TITLE[layout],
             climax && "cut-b",
             flip ? "cut-d md:col-start-5 md:row-start-1" : classic && !climax && "cut-a",
-            layout === "splash" && "px-0 md:px-0",
+            layout === "splash" && "md:px-0",
           )}
           style={{ "--panel-bg": climax ? "var(--color-straw)" : "var(--color-paper)" } as React.CSSProperties}
         >
@@ -257,8 +257,8 @@ export function ChapterSpread({ chapter: c, projects }: { chapter: Chapter; proj
             </p>
           ))}
           {c.gearCaption && !climax && (
-            <div data-caption className="mt-2 flex items-end gap-3">
-              <p className="bubble flex-1">{c.gearCaption}</p>
+            <div data-caption className="mt-2 flex flex-wrap items-end gap-3">
+              <p className="bubble min-w-0 flex-[1_1_10rem]">{c.gearCaption}</p>
               <span
                 aria-hidden
                 className="shrink-0 font-display text-[3.4rem] leading-[0.8] uppercase [-webkit-text-stroke:2px_var(--color-ink)] [paint-order:stroke_fill]"
