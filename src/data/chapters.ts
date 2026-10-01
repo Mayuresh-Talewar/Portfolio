@@ -12,6 +12,7 @@ export const stats: Stat[] = [
 export const chapters: Chapter[] = [
   {
     id: "the-beginning",
+    layout: "splash",
     number: 1,
     gear: 1,
     gearName: "Gear 1",
@@ -33,6 +34,7 @@ export const chapters: Chapter[] = [
   },
   {
     id: "academy-arc",
+    layout: "tiers",
     number: 2,
     gear: 2,
     gearName: "Gear 2",
@@ -54,12 +56,13 @@ export const chapters: Chapter[] = [
   },
   {
     id: "first-quest",
+    layout: "versus",
     number: 3,
     gear: 3,
     gearName: "Gear 3",
     arcTitle: "Gear 3: The First Quest Arc",
     narration: [
-      "Pune, 2024. My first crew and my first production MERN codebase.",
+      "Nagpur, 2024. My first crew and my first production MERN codebase.",
       "I secured 15+ routes and guided 4 juniors, all as an intern.",
     ],
     gearCaption: "Gear 3, giant scale: I went from components to full-stack modules.",
@@ -70,7 +73,7 @@ export const chapters: Chapter[] = [
     colorMode: "duo",
     role: "Full Stack Developer Intern",
     org: "Technology World Creater Pvt. Ltd.",
-    location: "Pune, Maharashtra",
+    location: "Nagpur, Maharashtra",
     highlights: [
       "Developed full-stack MERN (MongoDB, Express.js, React.js, Node.js) modules with reusable, modular components to speed up feature development, along with interactive React.js and Redux UI components that boosted user engagement and session time.",
       "Implemented JWT authentication with role-based access control (RBAC), securing 15+ protected routes and backend services.",
@@ -142,21 +145,25 @@ export const chapters: Chapter[] = [
         title: "AI Meeting Assistant",
         description:
           "Built an AI Meeting Assistant: an organization-aware AI agent that joins live meetings, provides real-time guidance, auto-generates action items and recommends assignees using RAG over company knowledge, reducing post-meeting follow-up work by ~50%.",
+        metric: { value: "~50%", label: "less post-meeting follow-up" },
       },
       {
         title: "Smart Email",
         description:
           "Engineered an agentic AI Smart Email platform with OAuth 2.0 inbox integration that classifies incoming mail by sender type (vendor vs. client) and drafts context-aware replies from past conversations, supporting manual, human-in-the-loop (AI draft-and-route) and fully autonomous modes; cut email handling time by ~45%.",
+        metric: { value: "~45%", label: "faster email handling" },
       },
       {
         title: "RAG Pipelines",
         description:
           "Architected Retrieval-Augmented Generation (RAG) pipelines on PostgreSQL/pgvector (Supabase) with OpenAI and Google Gemini APIs, covering embeddings, semantic search and prompt orchestration, with sub-second retrieval across 10,000+ documents.",
+        metric: { value: "10k+", label: "docs, sub-second retrieval" },
       },
       {
         title: "Material Management System",
         description:
           "Created a Material Management System for the full procurement lifecycle, from purchase order (PO) creation and approval to warehouse stock-in, with AI-assisted document drafting and automated approval routing, lowering manual processing time by ~40%.",
+        metric: { value: "~40%", label: "less manual processing" },
       },
     ],
   },
