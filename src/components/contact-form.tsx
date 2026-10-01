@@ -16,7 +16,7 @@ const FIELDS: { name: Field; label: string; type?: string; autoComplete: string;
 ];
 
 /** EmailJS REST (no SDK). Falls back to mailto when env keys are missing. */
-export function ContactForm({ email }: { email: string }) {
+export function ContactForm({ email, label = "Send" }: { email: string; label?: string }) {
   const [status, setStatus] = useState<Status>("idle");
   const [errors, setErrors] = useState<Partial<Record<Field, string>>>({});
 
@@ -88,16 +88,16 @@ export function ContactForm({ email }: { email: string }) {
           minLength: f.minLength,
           "aria-invalid": err ? true : undefined,
           "aria-describedby": err ? `contact-${f.name}-error` : undefined,
-          className: "w-full border border-current/40 bg-transparent p-2",
+          className: "w-full border-[3px] border-ink bg-paper p-3 text-base text-ink",
         };
         return (
           <div key={f.name} className="flex flex-col gap-1">
-            <label htmlFor={common.id} className="font-semibold">
+            <label htmlFor={common.id} className="font-display text-sm uppercase">
               {f.label}
             </label>
             {f.name === "message" ? <textarea rows={5} {...common} /> : <input type={f.type ?? "text"} {...common} />}
             {err && (
-              <p id={`contact-${f.name}-error`} className="text-sm text-red-700">
+              <p id={`contact-${f.name}-error`} className="text-sm font-bold text-jolly-ink">
                 {err}
               </p>
             )}
@@ -113,11 +113,11 @@ export function ContactForm({ email }: { email: string }) {
         type="submit"
         data-guide-target
         disabled={status === "sending"}
-        className="self-start border-2 border-current px-5 py-2 font-bold disabled:opacity-60"
+        className="btn btn-straw self-start disabled:opacity-60"
       >
-        {status === "sending" ? "Sending…" : "Send"}
+        {status === "sending" ? "Sending…" : label}
       </button>
-      <p role="status" aria-live="polite">
+      <p role="status" aria-live="polite" className="font-bold">
         {status === "sent" && "Message sent. Thanks, I'll reply soon."}
         {status === "error" && (
           <>

@@ -2,27 +2,33 @@ import type { ReactNode } from "react";
 import type { Part } from "@/types";
 import { cn } from "@/lib/utils";
 
-/** Section contract (tech plan §6): id + data-chapter + data-mode, labelled by its heading. */
+/** Section contract (tech plan §6): id + data-chapter + data-mode, labelled by its heading. One section = one manga spread. */
 export function Section({
   part,
   labelledBy = `${part.id}-title`,
   className,
   children,
+  backdrop,
+  ...data
 }: {
   part: Pick<Part, "id" | "colorMode">;
   labelledBy?: string;
   className?: string;
   children: ReactNode;
-}) {
+  /** Full-bleed art layer behind the page content (textures, flood). */
+  backdrop?: ReactNode;
+} & { [k: `data-${string}`]: string | undefined }) {
   return (
     <section
       id={part.id}
       data-chapter={part.id}
       data-mode={part.colorMode}
       aria-labelledby={labelledBy}
-      className={cn("scroll-mt-16 border-t border-current/15 px-4 py-16 md:px-8", className)}
+      className={cn("relative isolate scroll-mt-28 overflow-hidden border-b-[3px] border-ink px-3 py-14 md:scroll-mt-16 md:px-8 md:py-20", className)}
+      {...data}
     >
-      <div className="mx-auto max-w-5xl">{children}</div>
+      {backdrop}
+      <div className="relative mx-auto max-w-[1320px]">{children}</div>
     </section>
   );
 }

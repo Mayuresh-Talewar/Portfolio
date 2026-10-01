@@ -1,22 +1,36 @@
-/** h2 block for any section. `eyebrow` = e.g. "Ch.4 · Gear 4", `label` = plain role/years line. */
+import { cn } from "@/lib/utils";
+
+/** h2 block for any spread. `eyebrow` = arc ribbon (e.g. "Gear 4: The Blade Forge Arc"), `label` = plain role/years line. */
 export function ChapterHeader({
   id,
   title,
   eyebrow,
   label,
+  className,
 }: {
   id: string;
   title: string;
   eyebrow?: string;
   label?: string;
+  className?: string;
 }) {
   return (
-    <header className="mb-8">
-      {eyebrow && <p className="text-sm font-semibold uppercase tracking-wide opacity-70">{eyebrow}</p>}
-      <h2 id={id} className="text-3xl font-bold md:text-4xl">
+    <header className={cn("relative", className)}>
+      {eyebrow && (
+        <p data-ribbon className="ribbon origin-left text-sm whitespace-nowrap md:text-base">
+          {eyebrow}
+        </p>
+      )}
+      <h2
+        id={id}
+        data-title
+        className="mt-3 max-w-[13ch] font-display text-[clamp(2.4rem,6.4vw,5.6rem)] leading-[0.92] tracking-[-0.01em] uppercase text-balance"
+      >
         {title}
       </h2>
-      {label && <p className="mt-2 font-medium">{label}</p>}
+      {label && (
+        <p className="mt-4 max-w-[46ch] text-base font-bold [font-stretch:85%] md:text-lg">{label}</p>
+      )}
     </header>
   );
 }
