@@ -1,7 +1,8 @@
 # Tech Plan — "Vol. 1: Mayuresh Talewar" (ENG-004/005)
 Status: DRAFT, UI build waits for client approval · Owner: Head of Engineering · 2026-10-02
 Inputs: `03-design-spec.md` (DES-001), `02-research-report.md` §7, `04-motion-cookbook.md` (RND-003/004), `06-character-art-kit.md` (DES-002).
-Rules: Next 16 App Router (read `node_modules/next/dist/docs` before Next-specific code), RSC by default, `"use client"` only on leaves, `motion/react` only, no new deps beyond the shadcn/21st installs listed here.
+Rules: Next 16 App Router (read `node_modules/next/dist/docs` before Next-specific code), RSC by default, `"use client"` only on leaves, GSAP + ScrollTrigger (`useGSAP`, `gsap.matchMedia` for reduced motion); Three.js lazy-loaded via `dynamic(ssr:false)` only for 3D sections. Import from `@/lib/gsap` (registers ScrollTrigger + useGSAP once). No new deps beyond the shadcn/21st installs listed here.
+**ON HOLD (2026-10-02): design direction is being RESET to a One Piece theme (`09-reset-notes.md`). Sprint 2–4 UI tickets are on hold; Sprint 1 foundation tickets may need re-scoping after the new mockup. Animation switched from `motion` to GSAP (ENG-006): cookbook recipes below are intent references and must be ported to GSAP.**
 **Character = skipped now, ships later (client, 2026-10-02).** Sprints 1–4 contain no character UI and the cover works on its own; they leave hook points (§6) so Sprint 5 is a drop-in.
 
 ## 1. Data (done, `src/data`, types in `src/types/index.ts`)
@@ -17,7 +18,7 @@ Rules: Next 16 App Router (read `node_modules/next/dist/docs` before Next-specif
 Page: `src/app/page.tsx` (RSC) renders Cover → Ch.1–5 → Gaiden → Status → Finale from `parts` + `chapters`. Section contract (cookbook §0): `<section id={x.id} data-chapter={x.id} data-mode={x.colorMode} aria-labelledby>`. Motion leaves live in `src/components/motion/*` per cookbook §0.
 | Spec component | File | Kind | Props / notes |
 |---|---|---|---|
-| Providers | `components/motion/providers.tsx` | client | `MotionConfig reducedMotion="user"` (cookbook §0) |
+| gsap helper | `src/lib/gsap.ts` (done) | client | registers ScrollTrigger + useGSAP; reduced motion via `gsap.matchMedia("(prefers-reduced-motion: no-preference)")` in each leaf |
 | Panel | `components/manga/panel.tsx` | RSC | `span, tall?, tilt?, tone?, fill?, pageNo?, as?, index?`; `.panel-in` + `--i` |
 | PanelReveal | — | **dropped** | Pure CSS scroll-driven stagger (cookbook §3b). Delete `ui/fade-in.tsx` |
 | ChapterSection | `components/manga/chapter-section.tsx` | RSC | `part: Part, children`; applies the section contract |
@@ -49,13 +50,13 @@ Merges/drops (ponytail): PanelReveal → CSS, Screentone+FocusLines, ContentsLis
 ## 4. Installs (ENG-101 only, one agent, avoids lockfile races)
 1. `npx shadcn@latest init` (Tailwind 4; keep our tokens; `cn` in `@/lib/utils` already exists).
 2. 21st.dev (slugs return 403 to curl; **verify each URL on 21st.dev first**): `npx shadcn@latest add "https://21st.dev/r/magicui/bento-grid"` · `".../r/ekmas/button"` · `".../r/ekmas/image-card"`. Typing Animation is replaced by cookbook §2d `Typewriter` (Sprint 5); Comic Text only if SFX SVG is rejected.
-3. Rewrite `framer-motion` → `motion/react` in every added file; remove any deps the CLI adds that we don't import. Re-skin: radius 0, 3px frame, hard shadow.
+3. Port any `framer-motion`/`motion` code in added files to GSAP (`useGSAP`) or CSS; remove any deps the CLI adds that we don't import. Re-skin: radius 0, 3px frame, hard shadow.
 
-## 5. Motion (cookbook = source; Sprints 1–4 use only the non-character recipes)
-§0 Providers, boundaries, Next 16 `next/image` (`loading="eager" fetchPriority="high"`, not `priority`) · §2a `useActiveChapter` · §3a `InkWipe` · §3b `.panel-in` CSS · §4 `ColorReveal` · §5 `FocusLines` · §6a `ReadingProgress` · §6b `ChapterRail`. Character recipes §1, §2b–2d, §7, §8 belong to Sprint 5. No `layoutId` hand-off anywhere: the guide is one fixed layer (cookbook §8).
+## 5. Motion (GSAP + ScrollTrigger; cookbook recipes = intent, port each to `useGSAP` + `ScrollTrigger`, wrap in `gsap.matchMedia` for reduced motion; Three.js only via `dynamic(ssr:false)` in the section that needs it)
+§0 boundaries (Providers dropped: no MotionConfig with GSAP), Next 16 `next/image` (`loading="eager" fetchPriority="high"`, not `priority`) · §2a `useActiveChapter` · §3a `InkWipe` · §3b `.panel-in` CSS · §4 `ColorReveal` · §5 `FocusLines` · §6a `ReadingProgress` · §6b `ChapterRail`. Character recipes §1, §2b–2d, §7, §8 belong to Sprint 5. No `layoutId` hand-off anywhere: the guide is one fixed layer (cookbook §8).
 
 ## 6. Hook points Sprints 1–4 must leave (so Sprint 5 adds, never rewrites)
-- **Layout slot**: `layout.tsx` body renders `<Providers>{children}<GuideLayer /></Providers>`; `components/guide/guide-layer.tsx` is an RSC that returns `null` (z-index 40 reserved).
+- **Layout slot**: `layout.tsx` body renders `{children}<GuideLayer />`; `components/guide/guide-layer.tsx` is an RSC that returns `null` (z-index 40 reserved).
 - **Cover slot**: cover section is `relative isolate`, `major` art panel holds `<FocusLines/>` + an empty `<div data-slot="break-out" aria-hidden />` sized to the art box; without a character the panel shows the portrait-free cover composition (focus lines, SFX, title).
 - **Sections**: every section carries `id`, `data-chapter`, `data-mode` (needed for the rail anyway). Finale CTA carries `data-guide-target`.
 - **Data**: `guide` fields stay in `chapters.ts`, unused by UI.
@@ -66,8 +67,8 @@ Every ticket: lint + build green, 375px + 1280px checked, reduced motion checked
 ### Sprint 1 — Foundation
 | Ticket | Files (owned) | Acceptance |
 |---|---|---|
-| ENG-101 Installs | `components.json`, `package*.json`, `components/ui/{bento-grid,button,image-card}.tsx` | shadcn init + 21st adds; zero `framer-motion` imports; no unused deps |
-| ENG-102 Tokens + fonts + shell | `globals.css`, `layout.tsx` (after Growth hands over), `motion/providers.tsx`, `guide/guide-layer.tsx` | All spec §2/§4/§8 tokens; 3 fonts via `next/font`; light default with OS dark; `data-theme`/`data-mode` swaps work; `GuideLayer` returns null; cookbook CSS (§3b, §5, §4) in place |
+| ENG-101 Installs | `components.json`, `package*.json`, `components/ui/{bento-grid,button,image-card}.tsx` | shadcn init + 21st adds; zero `motion`/`framer-motion` imports; no unused deps |
+| ENG-102 Tokens + fonts + shell | `globals.css`, `layout.tsx` (after Growth hands over), `guide/guide-layer.tsx` | All spec §2/§4/§8 tokens; 3 fonts via `next/font`; light default with OS dark; `data-theme`/`data-mode` swaps work; `GuideLayer` returns null; cookbook CSS (§3b, §5, §4) in place |
 | ENG-103 Primitives | `manga/{panel,tone,sfx,stat-burst,speech-bubble}.tsx`; delete `ui/fade-in.tsx` | Every span/tone/fill/tilt renders; tilt off <768; `.panel-in` static without scroll-timeline or with reduced motion; decor `aria-hidden`; bubble text is real text |
 | ENG-104 Sections + nav | `manga/{chapter-section,chapter-title}.tsx`, `nav/*`, `motion/{use-active-chapter,reading-progress}.ts(x)` | Section contract applied; one observer; rail `aria-current`; pill opens `<dialog>`, Esc closes, focus returns; skip link; progress uses `scaleX` |
 
