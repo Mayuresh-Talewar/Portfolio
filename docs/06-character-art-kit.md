@@ -2,7 +2,7 @@
 Status: READY FOR CLIENT · Owner: Design Studio · 2026-10-02 · Refs: `02-research-report.md` §7.5, `03-design-spec.md` §1-2, §9
 Until the art lands, the site and tile show a labelled placeholder box at the final size (no interim drawing). Target look (client ref `docs/references/client-style-ref-01.jpg`, traits only, never copy that character): raw G-pen shōnen manga ink, high contrast, solid blacks, flicked-strand hair, angular face, cocky grin, correct anatomy. Not chibi, clip-art or a cartoon avatar.
 
-## 1. Character design sheet (from `public/images/portrait.webp`)
+## 1. Character design sheet (from `public/images/portrait.png`)
 | Trait | Spec |
 |---|---|
 | Age / build | Early-to-mid 20s, medium build, broad shoulders. Shōnen protagonist proportions: **6.5 heads tall**, not chibi, not bishōnen-thin |
@@ -19,8 +19,8 @@ Until the art lands, the site and tile show a labelled placeholder box at the fi
 
 ## 2. Prompt pack (ChatGPT image gen / Gemini "Nano Banana"): copy-paste ready
 **Workflow**
-1. New chat. Upload `portrait.webp` and paste **2.1 Master**. Regenerate until the face reads as you, then save that sheet as `ref-sheet.png`.
-2. For each pose: new turn (new chat if the face starts drifting). Upload **`ref-sheet.png` + `portrait.webp`**, paste the pose line, then the **2.0 Style + Negative** block.
+1. New chat. Upload `portrait.png` and paste **2.1 Master**. Regenerate until the face reads as you, then save that sheet as `ref-sheet.png`.
+2. For each pose: new turn (new chat if the face starts drifting). Upload **`ref-sheet.png` + `portrait.png`**, paste the pose line, then the **2.0 Style + Negative** block.
 3. One pose per turn. If something is wrong, **regenerate**; don't ask the tool to "edit" more than once, because faces drift.
 We describe the look instead of naming shows or artists; that's safer for licensing and gives the tools clearer instructions.
 
@@ -31,7 +31,7 @@ OUTPUT: single character, full figure unless stated, transparent background (PNG
 NEGATIVE (do NOT do): no chibi, no super-deformed, no big-head avatar, no cartoon/clip-art/flat vector avatar, no 3D render, no Pixar/Disney/CGI look, no semi-realistic painting, no soft airbrushed shading, no clean vector lines, no large flat grey areas, no photo filter look, no western comic style, no blurry or sketchy lines, no extra fingers or broken hands, no purple, no violet, no neon glow, no gradients on clothing, no lens flare.
 ```
 
-### 2.1 Master: character reference sheet (upload `portrait.webp`)
+### 2.1 Master: character reference sheet (upload `portrait.png`)
 ```
 Create a professional anime CHARACTER REFERENCE SHEET of the man in the uploaded photo, keeping a strong likeness.
 CHARACTER: early-20s South Asian man, warm medium-brown skin, very dark brown hair in a tall voluminous swept-up quiff (pompadour) with short tapered sides, thick straight dark eyebrows, dark brown almond-shaped eyes, NO glasses, thin moustache and short chin beard with light jaw stubble, oval face with a softly squared jaw, calm confident expression.
@@ -43,7 +43,7 @@ Keep face, hair and proportions identical in every view.
 [paste 2.0 Style + Negative block]
 ```
 
-### 2.2 Pose prompts (upload `ref-sheet.png` + `portrait.webp` each time)
+### 2.2 Pose prompts (upload `ref-sheet.png` + `portrait.png` each time)
 Start every pose prompt with this line, add the pose line from the table, then paste the 2.0 block:
 ```
 Draw the SAME character from the uploaded reference sheet (same face, quiff hairstyle, eyebrows, beard, outfit, proportions). Raw black-and-white G-pen manga ink, solid blacks, high contrast. Canvas 1200x1600 px (3:4), transparent background, full body, centered horizontally, feet on a baseline 60 px above the bottom edge, top of hair about 120 px below the top edge.

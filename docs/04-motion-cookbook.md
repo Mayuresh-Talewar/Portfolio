@@ -1,45 +1,75 @@
-# Motion Cookbook (RND-003)
-Status: DONE · Owner: R&D · 2026-10-02 · Inputs: `02-research-report.md` §2, §7 · Stack: Next 16.3.8, React 19.2.8, Tailwind 4, `motion` 13.5.0 (`motion/react`)
+# Motion Cookbook (RND-003 → RND-008: GSAP)
+Status: DONE · Owner: R&D · 2026-10-02 · Stack: Next 16.3.8, React 19.2.8, Tailwind 4, **`gsap` 3.15.0 + `@gsap/react` 2.1.2** (`motion` removed). Supersedes the `motion/react` version.
 
-**Verified**: every TSX file below was type-checked (`tsc --strict`, project compiler options), linted with the project's `eslint.config.mjs` (next core-web-vitals + TS: 0 errors), and server-rendered with `react-dom/server` (no throw). All checks ran in a scratch folder; nothing was added to `src/`. Visual tuning (exact ranges, offsets, art alignment) still needs the real pose art in a browser.
+**Verified**: every TS/TSX block below is inlined from a scratch copy of `src/` (the real `src/types`, `src/data`, `src/components`, plus the proposed `src/lib/gsap.ts` in §0 and the `perch` type from §8.2). That copy passed `tsc --noEmit` against `node_modules/gsap/types` (strict, project tsconfig) and `eslint` with the project config, both with 0 problems. Nothing in `src/` was edited. Not verified: runtime and visual tuning (ranges, offsets, art alignment). Those need a browser and the real art.
 
 ## 0. Ground rules
-- **Boundaries**: `page.tsx` and every `<section>`, `h1`/`h2` and copy stay **server components**. Only these leaves are `"use client"`: `Providers`, `GuideEntry`, `BreakOut`, `Tear`, `GuideDock`, `Typewriter`, `useActiveChapter`, `InkWipe`, `ColorReveal`, `ReadingProgress`, `ChapterRail`. A client leaf may wrap server `children` (`ColorReveal`). Suggested home: `src/components/motion/*`, data in `src/data/guide.ts`.
-- **Section contract**: every chapter is `<section id="ch5" data-chapter="ch5">` with `id === data-chapter`. The cover is `id="cover" data-chapter="cover"`. One IntersectionObserver reads these attributes (§2).
-- **Reduced motion, global**: `MotionConfig reducedMotion="user"` turns off **transform and layout** animations app-wide but keeps opacity/color. It does **not** affect values bound through `style={{ x: motionValue }}` (scroll-linked), so `BreakOut` handles reduced motion itself.
-- **Perf, global**: animate only transform/opacity (filter once, §4). In motion 13 only `opacity`, `clipPath`, `filter`, `backgroundColor` and full `transform` run on the native scroll timeline (`motion-dom` `acceleratedValues`). `scale`/`y` scroll values run on motion's rAF loop, which is fine for 1-3 elements. **Next 16**: `next/image` `priority` is deprecated. Use `loading="eager" fetchPriority="high"` (or `preload`).
-- **Version notes**: `staggerChildren` is deprecated. Use `transition={{ delayChildren: stagger(0.03) }}`.
+- **One import point.** `src/lib/gsap.ts` currently registers only `ScrollTrigger` + `useGSAP`. **Replace it with the version below** (Senior Dev owns `src/`). Every recipe imports `gsap`, `ScrollTrigger`, `SplitText`, `MotionPathPlugin`, `useGSAP` and `MQ` from `@/lib/gsap`.
+- **Registration (checked in the 3.15 sources).** All plugins ship in the public `gsap` package: `gsap/ScrollTrigger`, `gsap/SplitText`, `gsap/MotionPathPlugin` (+ `gsap/DrawSVGPlugin`, `gsap/MorphSVGPlugin`, `gsap/ScrollSmoother`, which we don't need).
+  - **SplitText MUST be registered.** Unregistered, it falls back to `window.gsap`, which is undefined with ESM imports. It then misses `gsap.context` (no auto-revert) and resolves selector strings document-wide.
+  - **MotionPathPlugin MUST be registered**, or the `motionPath` property is ignored.
+  - We don't use DrawSVG: strokes are drawn with `pathLength={1}` + `strokeDasharray={1}` and a tween of `strokeDashoffset` 1 → 0.
+- **useGSAP = cleanup.** Every tween, ScrollTrigger, `gsap.matchMedia()` and `SplitText` created inside the callback belongs to its context and is reverted on unmount. A matchMedia created inside a context is pushed to that context and inherits its `scope`. Route changes unmount, so nothing leaks.
+  - With `dependencies` and no `revertOnUpdate`, the context is **not** reverted between runs (used on purpose in §8.4).
+  - Tweens created later from event/scroll callbacks are outside the scope. Query elements explicitly there (§9d).
+- **Reduced motion and mobile.** Inside `useGSAP`, use `const mm = gsap.matchMedia(); mm.add(MQ.ok | MQ.desk | {…conditions}, fn)`. `MQ.desk`/`MQ.mob` already include "motion OK". Reduced motion always gets the **final, readable state** (`gsap.set` or `tl.progress(x)`), never a hidden one.
+- **Tailwind 4 trap.** `scale-*`, `rotate-*` and `translate-*` utilities compile to the individual CSS `scale`/`rotate`/`translate` properties, which **multiply with GSAP's `transform`**. Never put `scale-*` or `rotate-*` on an element GSAP scales or rotates; give it an inline `style={{ transform: "scale(0)" }}` instead (GSAP parses it). `translate-*` is safe only on elements GSAP doesn't move.
+- **Boundaries.** `page.tsx`, every `<section>`, headings and copy stay server components. Client leaves live in `src/components/motion/*` (kebab-case, matching the repo) and wrap server `children` where needed (`ColorReveal`, `IslandTitle`, `WantedDrop`, `GaidenStrip`, `GearUp`). `Tear`, `InkPoof`, `GearMeter` and `GearArt` are server-safe.
+- **Section contract** (unchanged): `<Section part>` renders `<section id={id} data-chapter={id} data-mode={colorMode} aria-labelledby>`.
+- **Perf.** Animate only transform/opacity/autoAlpha. The exceptions are the one-off `filter` fade (§4) and the Gear 5 `--flood` scrub (§9d). `next/image`: `priority` is deprecated in Next 16, so use `loading="eager" fetchPriority="high"`.
 
-```tsx
-// Providers.tsx  (app/layout.tsx: <body><Providers>{children}</Providers></body>)
+```ts
 "use client";
-import { MotionConfig } from "motion/react";
 
-export function Providers({ children }: { children: React.ReactNode }) {
-  return <MotionConfig reducedMotion="user">{children}</MotionConfig>;
-}
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { SplitText } from "gsap/SplitText";
+import { MotionPathPlugin } from "gsap/MotionPathPlugin";
+import { useGSAP } from "@gsap/react";
+
+// Register once, client only. Import everything GSAP from here, never from "gsap/*" directly.
+if (typeof window !== "undefined") gsap.registerPlugin(ScrollTrigger, SplitText, MotionPathPlugin, useGSAP);
+
+/** gsap.matchMedia() conditions. `ok` = motion allowed; `desk`/`mob` already include `ok`. */
+export const MQ = {
+  ok: "(prefers-reduced-motion: no-preference)",
+  reduce: "(prefers-reduced-motion: reduce)",
+  desk: "(min-width: 768px) and (prefers-reduced-motion: no-preference)",
+  mob: "(max-width: 767px) and (prefers-reduced-motion: no-preference)",
+} as const;
+
+export { gsap, ScrollTrigger, SplitText, MotionPathPlugin, useGSAP };
 ```
 
 ## 1. Guide character: greeting, 4th-wall break, hand-off
-**Technique pick: `useScroll` transforms in the hero, then a state hand-off to the dock (no `layoutId`).** A `layoutId` jump from a scrolling panel to a `position: fixed` dock measures layout in the middle of a scroll, so it snaps on fast scrolls and on scroll-up. Scroll-linked transforms are reversible, need zero layout reads and stay on transform/opacity. The hand-off is one shared boundary: the hero character fades out by hero progress 0.5. That is exactly when the cover's bottom edge crosses the viewport's center line, which is the same moment the chapter observer (§2) marks Ch.1 active and the dock slides in. This assumes a `100svh` cover. If the cover is taller, move the `0.4 → 0.5` exit range to `(h - 0.5vh) / h`.
+**Technique (unchanged): a scrubbed hero timeline, then a state hand-off to the fixed layer (no shared-layout jump).** The hero layers are out by hero progress 0.5. That is exactly when the cover's bottom edge crosses the viewport centre, when the chapter observer (§2a) marks Ch.1 active, and when the Traveler (§8) takes over. This assumes a `100svh` cover. If the cover is taller, move the `0.4 → 0.5` exit to `(h - 0.5vh) / h`.
+Timeline (hero progress `p`): 0.05-0.12 hello → break-out pose · 0-0.3 scale 1 → 1.3 and rise · 0.15-0.22 tear opens · 0.2-0.3 cracks draw · 0.22 single impact frame + バリッ · 0.4-0.5 exit.
 
-Timeline (hero scroll progress `p`, `["start start","end start"]`): 0.05-0.12 hello → break-out pose · 0-0.3 scale 1 → 1.3 and rise · 0.15-0.22 tear opens · 0.2-0.3 cracks draw · 0.22 single impact frame + バリッ · 0.4-0.5 exit → dock.
-
-### 1a. Entry greeting (`GuideEntry.tsx`)
+### 1a. Entry greeting (`guide-entry.tsx`)
 ```tsx
 "use client";
 import Image from "next/image";
-import { motion } from "motion/react";
+import { useRef } from "react";
+import { gsap, MQ, useGSAP } from "@/lib/gsap";
 
-// Pose 01 + "Hello!" bubble. Starts at opacity 1 so the LCP isn't held back.
+// Pose 01 + "Hello!" bubble. The body never starts at opacity 0 (LCP).
 export function GuideEntry() {
+  const root = useRef<HTMLDivElement>(null);
+  useGSAP(
+    () => {
+      const mm = gsap.matchMedia();
+      mm.add(MQ.ok, () => {
+        gsap.from(root.current, { scale: 0.92, y: 16, duration: 0.6, ease: "back.out(2)" });
+        gsap.from(".bubble", { scale: 0, autoAlpha: 0, delay: 0.5, duration: 0.4, ease: "back.out(2.5)", transformOrigin: "0% 100%" });
+      });
+      mm.add(MQ.reduce, () => {
+        gsap.from(".bubble", { autoAlpha: 0, delay: 0.5, duration: 0.3 });
+      });
+    },
+    { scope: root },
+  );
   return (
-    <motion.div
-      className="relative size-full origin-bottom"
-      initial={{ scale: 0.92, y: 16 }}
-      animate={{ scale: 1, y: 0 }}
-      transition={{ type: "spring", bounce: 0.45, duration: 0.6 }}
-    >
+    <div ref={root} className="relative size-full origin-bottom">
       <Image
         src="/guide/01-wave-hello.webp"
         alt="Mayuresh, drawn as a manga character, waving hello"
@@ -49,104 +79,109 @@ export function GuideEntry() {
         sizes="(min-width: 768px) 40vw, 80vw"
         className="object-contain"
       />
-      <motion.p
-        className="bubble absolute -top-2 right-0"
-        style={{ originX: 0, originY: 1 }}
-        initial={{ opacity: 0, scale: 0 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.5, type: "spring", bounce: 0.5 }}
-      >
-        Hello!
-      </motion.p>
-    </motion.div>
+      <p className="bubble absolute -top-2 right-0">Hello!</p>
+    </div>
   );
 }
 ```
-- **Reduced motion**: `MotionConfig` skips the scale/y pop. The bubble still fades in (opacity is allowed).
-- **Perf**: the character is likely the LCP element. Never start it at `opacity: 0`, because Chrome doesn't count invisible paints and the LCP would wait for hydration. Use the `eager` + `fetchPriority="high"` hero image only. The SSR test confirmed a `<link rel="preload">` is emitted.
+- **LCP**: the body animates `scale`/`y` from its rendered state and never starts at opacity 0. **Reduced motion**: the bubble just fades in.
 
-### 1b. Break-out (`BreakOut.tsx`). Mount it inside the server cover: `<section id="cover" data-chapter="cover" className="relative isolate h-svh overflow-hidden"><BreakOut /></section>`
+### 1b. Break-out (`break-out.tsx`), mounted in the cover's `data-slot="break-out"` (cover: `relative isolate h-svh overflow-hidden`)
 ```tsx
 "use client";
 import Image from "next/image";
 import { useRef } from "react";
-import { motion, useAnimate, useMotionValue, useMotionValueEvent, useReducedMotion, useScroll, useTransform, type MotionStyle } from "motion/react";
-import { GuideEntry } from "./GuideEntry";
-import { Tear } from "./Tear";
-const BOX = "absolute inset-x-0 bottom-0 mx-auto aspect-[3/4] h-[85%] origin-bottom"; // 2 copies of pose 02, 1 transform: body under the border, head over it
-const Layer = ({ z, clip, style }: { z: string; clip: string; style: MotionStyle }) => (
-  <motion.div style={style} className={`${BOX} ${z}`}>
+import { gsap, MQ, useGSAP } from "@/lib/gsap";
+import { GuideEntry } from "./guide-entry";
+import { Tear } from "./tear";
+
+const BOX = "absolute inset-x-0 bottom-0 mx-auto aspect-[3/4] h-[85%] origin-bottom"; // 2 copies of pose 02: body under the border, head over it
+const Layer = ({ z, clip }: { z: string; clip: string }) => (
+  <div className={`bo-layer opacity-0 ${BOX} ${z}`}>
     <Image src="/guide/02-break-out.webp" alt="" fill sizes="40vw" className="object-contain" style={{ clipPath: clip }} />
-  </motion.div>
+  </div>
 );
+
+// One timeline, length 1 = hero scroll progress 0..1 (same ranges as the old motion version).
 export function BreakOut() {
-  const ref = useRef<HTMLDivElement>(null), hit = useRef(false);
-  const [flash, animate] = useAnimate<HTMLDivElement>();
-  const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
-  const frozen = useMotionValue(0.35); // reduced motion: the broken-out frame, static
-  const reduce = useReducedMotion();
-  const p = reduce ? frozen : scrollYProgress;
-  const style = {
-    scale: useTransform(p, [0, 0.3], [1, 1.3]),
-    y: useTransform(p, [0, 0.3, 0.5], ["0%", "-10%", "-40%"]),
-    opacity: useTransform(p, [0.05, 0.12, 0.4, 0.5], [0, 1, 1, 0]), // out by 0.5 = dock takes over
-  };
-  const hello = useTransform(p, [0.05, 0.12], [1, 0]);
-  useMotionValueEvent(scrollYProgress, "change", (v) => {
-    if (hit.current || v < 0.22 || reduce) return; // one impact frame per page load, never loops (WCAG 2.3.1)
-    hit.current = true; animate(flash.current, { opacity: [1, 0] }, { duration: 0.1, ease: "linear" });
-  });
+  const root = useRef<HTMLDivElement>(null);
+  useGSAP(
+    () => {
+      const mm = gsap.matchMedia();
+      mm.add({ ok: MQ.ok, reduce: MQ.reduce }, (ctx) => {
+        const reduce = Boolean(ctx.conditions?.reduce);
+        let hit = false;
+        const tl = gsap.timeline({
+          defaults: { ease: "none" },
+          paused: reduce,
+          scrollTrigger: reduce ? undefined : { trigger: root.current, start: "top top", end: "bottom top", scrub: true },
+        });
+        tl.fromTo(".bo-layer", { scale: 1, yPercent: 0 }, { scale: 1.3, yPercent: -10, duration: 0.3 }, 0)
+          .to(".bo-layer", { yPercent: -40, duration: 0.2 }, 0.3)
+          .fromTo(".bo-layer", { opacity: 0 }, { opacity: 1, duration: 0.07 }, 0.05)
+          .to(".bo-layer", { opacity: 0, duration: 0.1 }, 0.4) // out by 0.5 = dock takes over
+          .to(".bo-hello", { opacity: 0, duration: 0.07 }, 0.05)
+          .fromTo(".tear-hole", { scale: 0 }, { scale: 1, duration: 0.07 }, 0.15)
+          .to(".tear-crack", { strokeDashoffset: 0, duration: 0.1 }, 0.2)
+          .fromTo(".tear-sfx", { opacity: 0 }, { opacity: 1, duration: 0.03 }, 0.22)
+          .to(".tear-sfx", { opacity: 0, duration: 0.2 }, 0.25)
+          .add(() => {
+            if (hit || reduce) return; // one impact frame per page load (WCAG 2.3.1)
+            hit = true;
+            gsap.fromTo(".bo-flash", { opacity: 1 }, { opacity: 0, duration: 0.1, ease: "none" });
+          }, 0.22)
+          .set({}, {}, 1);
+        if (reduce) tl.progress(0.35); // static broken-out frame
+      });
+    },
+    { scope: root },
+  );
   return (
-    <div ref={ref} className="absolute inset-0 isolate">
-      <Layer z="z-0" clip="inset(40% 0 0 0)" style={style} />
+    <div ref={root} className="absolute inset-0 isolate">
+      <Layer z="z-0" clip="inset(40% 0 0 0)" />
       <div className="absolute inset-4 z-10 border-4 border-ink" />
-      <Tear p={p} />
-      <Layer z="z-20" clip="inset(0 0 60% 0)" style={style} />
-      <motion.div style={{ opacity: hello }} className={`${BOX} z-20`}><GuideEntry /></motion.div>
-      <div ref={flash} aria-hidden className="pointer-events-none absolute inset-0 z-30 bg-white opacity-0 mix-blend-difference" />
+      <Tear />
+      <Layer z="z-20" clip="inset(0 0 60% 0)" />
+      <div className={`bo-hello ${BOX} z-20`}>
+        <GuideEntry />
+      </div>
+      <div aria-hidden className="bo-flash pointer-events-none absolute inset-0 z-30 bg-white opacity-0 mix-blend-difference" />
     </div>
   );
 }
 ```
-- **Why two `Layer`s**: a transformed element creates its own stacking context, so a single image can't sit both under and over the border. Two copies of the same file (decoded once) with complementary `clip-path: inset()` sandwich the border (`z-10`): the body stays inside the panel and the head/arm pop over the frame. Tune the `40%`/`60%` split to the art's shoulder line.
-- **Impact frame**: a white `mix-blend-difference` sheet flashes for 100 ms, which reads as an inverted manga impact frame. It fires once per page load.
-- **Reduced motion**: `p` is frozen at 0.35, so the user sees a static broken-out composition (tear, cracks, overflow) with no scrub, no flash and no exit.
-- **Perf**: `scale`/`y`/`opacity` on 2 layers plus 1 SVG, with no layout reads. The pose 02 image loads lazily (not eager), so it doesn't compete with the LCP.
+- **Two `Layer`s**: a transformed element is its own stacking context, so two copies of pose 02 with complementary `clip-path` sandwich the border (`z-10`). Tune the 40/60 split to the art's shoulder line.
+- **Impact frame**: a 100 ms white `mix-blend-difference` sheet, fired once per load from a timeline callback.
+- **Reduced motion**: the same timeline, paused at `progress(0.35)`: a static broken-out frame, with no scrub, flash or exit.
+- **Perf**: one scrubbed timeline, transform/opacity plus dash offsets, and no layout reads.
 
-### 1c. Torn border + cracks + SFX (`Tear.tsx`)
+### 1c. Torn border + cracks + SFX (`tear.tsx`): **now a server component**, animated by 1b's timeline
 ```tsx
-"use client";
-import { motion, useTransform, type MotionValue } from "motion/react";
-
+// Server component: static markup, animated by BreakOut's timeline (classes tear-hole / tear-crack / tear-sfx).
 const HOLE = "M30 40 L45 22 L58 34 L75 12 L92 30 L110 8 L124 28 L145 14 L156 36 L172 30 L160 52 L140 50 L128 70 L108 54 L90 72 L78 52 L55 64 L50 46 Z";
 const CRACKS = ["M30 40 L12 30 L-20 34", "M172 30 L190 12 L222 8", "M90 72 L84 90 L70 110", "M140 50 L160 78 L190 84", "M110 8 L114 -14"];
 
-// Torn hole in the panel's top border + cracks + SFX. Transform/pathLength only; no animated mask.
-export function Tear({ p }: { p: MotionValue<number> }) {
-  const scale = useTransform(p, [0.15, 0.22], [0, 1]);
-  const draw = useTransform(p, [0.2, 0.3], [0, 1]);
-  const sfx = useTransform(p, [0.22, 0.25, 0.45], [0, 1, 0]);
+export function Tear() {
   return (
     <div aria-hidden className="pointer-events-none absolute left-1/2 top-4 z-[15] h-24 w-56 -translate-x-1/2 -translate-y-1/2">
-      <motion.svg viewBox="0 0 200 80" className="absolute inset-0 size-full" style={{ scale }}>
+      <svg viewBox="0 0 200 80" className="tear-hole absolute inset-0 size-full" style={{ transform: "scale(0)" }}>
         <path d={HOLE} fill="var(--paper)" stroke="var(--ink)" strokeWidth={3} strokeLinejoin="miter" />
-      </motion.svg>
+      </svg>
       <svg viewBox="0 0 200 80" className="absolute inset-0 size-full overflow-visible">
         {CRACKS.map((d) => (
-          <motion.path key={d} d={d} fill="none" stroke="var(--ink)" strokeWidth={2} style={{ pathLength: draw }} />
+          // pathLength=1 + dasharray 1: draw by tweening strokeDashoffset 1 -> 0 (no DrawSVG plugin needed)
+          <path key={d} className="tear-crack" d={d} pathLength={1} strokeDasharray={1} strokeDashoffset={1} fill="none" stroke="var(--ink)" strokeWidth={2} />
         ))}
       </svg>
-      <motion.span style={{ opacity: sfx }} className="sfx absolute -right-20 -top-8 rotate-[-8deg]">バリッ</motion.span>
+      <span className="tear-sfx sfx absolute -right-20 -top-8 rotate-[-8deg] opacity-0">バリッ</span>
     </div>
   );
 }
 ```
-- **Mask decision**: a paper-filled jagged SVG patch over the border does the same job as a `mask-image` hole. Animating its `scale` stays on the compositor, while animating `mask-size` repaints the border every frame. If Design wants a true see-through hole (showing a texture behind), put the same `HOLE` path in a `mask-image` data URL on a static layer and still animate only that layer's transform.
-- **Reduced motion**: driven by the frozen `p`, so it renders static. **Perf**: 5 short paths, `pathLength` is a cheap dash update, and the whole block is `aria-hidden`.
 
 ## 2. Guide dock
-### 2a. Active chapter: one observer (`useActiveChapter.ts`), shared with the rail (§6)
-```tsx
+### 2a. Active chapter: one observer (`use-active-chapter.ts`), unchanged (no animation library)
+```ts
 "use client";
 import { useEffect, useState } from "react";
 
@@ -165,113 +200,63 @@ export function useActiveChapter() {
   return active;
 }
 ```
-- **Why not `useInView` per section**: that needs a client wrapper around each section, which would turn the sections into client components. One observer reading `data-chapter` keeps every section on the server.
-- **Perf**: no scroll listener, and state changes only at chapter boundaries. The two consumers (dock and rail) mean two observers, which is negligible. Move it to a context if a third consumer appears.
+- `chapter-nav.tsx` already runs its own observer. Two observers are negligible; move to a context if a third consumer appears.
+- **2b / 2c removed**: superseded by `src/data/chapters.ts` `guide` data and by §8.6. The fallback if travel is cut is §8.6 with `<Traveler>` unmounted.
 
-### 2b. Data (`src/data/guide.ts`). **Superseded by §8**: guide data already lives in `src/data/chapters.ts` (`guide: { pose, line, enterPose? }`), so don't create `guide.ts`
-```ts
-// No entry = no dock (cover: hero owns him; finale: he lives in the last panel).
-export const GUIDE: Record<string, { pose: string; line: string }> = {
-  ch1: { pose: "04-point", line: "Nagpur, 2018. Where it all started." },
-  ch5: { pose: "04-point", line: "This is the arc I'm in right now!" },
-  skills: { pose: "05-think", line: "My status window. No fake levels." },
-};
-```
-
-### 2c. Dock: pose swap, bubble, Hide toggle, mobile 64px head (`GuideDock.tsx`). **Superseded by §8.6**, which keeps the mobile head and the toggle and replaces the static desktop dock with the traveling layer. Kept here as the fallback if travel is cut.
+### 2d. Typewriter (`typewriter.tsx`)
 ```tsx
 "use client";
-import Image from "next/image";
-import { useState } from "react";
-import { AnimatePresence, motion } from "motion/react";
-import { GUIDE } from "@/data/guide";
-import { Typewriter } from "./Typewriter";
-import { useActiveChapter } from "./useActiveChapter";
+import { useRef } from "react";
+import { gsap, MQ, useGSAP } from "@/lib/gsap";
 
-export function GuideDock() {
-  const chapter = useActiveChapter();
-  const [hidden, setHidden] = useState(false);
-  const [open, setOpen] = useState(false); // mobile: bubble only on tap
-  const g = GUIDE[chapter];
-  return (
-    <aside aria-label="Guide" className="fixed bottom-4 left-4 z-40 flex flex-col items-start gap-2 md:left-auto md:right-14 md:items-end">
-      <AnimatePresence>
-        {g && !hidden && ( // no entry (cover, finale) = no dock: the hero hands off here
-          <motion.div key="dock" initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 40, opacity: 0 }} className="flex items-end gap-2 md:flex-row-reverse">
-            <div className="relative hidden aspect-[3/4] h-[200px] md:block">
-              <AnimatePresence initial={false}>
-                <motion.div key={g.pose} initial={{ opacity: 0, scale: 0.92 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }} className="absolute inset-0">
-                  <Image src={`/guide/${g.pose}.webp`} alt="" fill sizes="150px" className="object-contain" />
-                </motion.div>
-              </AnimatePresence>
-            </div>
-            <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-label="Guide: show message" className="relative size-16 overflow-hidden rounded-full border-[3px] border-ink bg-paper md:hidden">
-              <Image src="/guide/07-bust.webp" alt="" fill sizes="64px" />
-            </button>
-            <p className={`bubble max-w-56 ${open ? "" : "hidden md:block"}`}><Typewriter key={chapter} text={g.line} /></p>
-          </motion.div>
-        )}
-      </AnimatePresence>
-      {g && <button type="button" aria-pressed={hidden} onClick={() => setHidden((h) => !h)} className="min-h-11 px-3 text-sm underline">
-        {hidden ? "Show guide" : "Hide guide"}
-      </button>}
-    </aside>
-  );
-}
-```
-- **Layout**: the dock sits at `right-14` on desktop so it clears the chapter rail. On mobile it sits bottom-left at 64px (≥44px target), clear of the CTAs and the progress pill.
-- **Reduced motion**: `MotionConfig` drops the `y`/`scale`, so poses swap with a 150 ms fade and the dock fades in. `Typewriter` shows the whole line at once.
-- **Perf**: one fixed element and opacity/transform only. Images in `display:none` branches (`hidden md:block`) aren't fetched on load, so mobile never downloads full-body poses. Each pose (≤80 KB) is fetched on its first chapter. If the first swap flashes empty, warm the cache with `new Image().src = ...` on idle.
-- **Skipped**: walking bob, hiding while a form field has focus, auto-hiding the mobile bubble, and persisting "Hide" across reloads. Add each one only if QA asks.
-
-### 2d. Typewriter (`Typewriter.tsx`)
-```tsx
-"use client";
-import { motion, stagger, useReducedMotion } from "motion/react";
-
-// Replay with key={line}. AT reads the full line once; per-char spans are aria-hidden.
-// Chars fade in at opacity 0 -> 1 in place, so the bubble never reflows.
+// Replay with key={line}. AT reads the full line once; per-char spans are aria-hidden and never reflow.
 export function Typewriter({ text }: { text: string }) {
-  const reduce = useReducedMotion();
+  const root = useRef<HTMLSpanElement>(null);
+  useGSAP(() => {
+    const mm = gsap.matchMedia();
+    mm.add(MQ.ok, () => {
+      gsap.from(root.current!.children, { opacity: 0, duration: 0.01, stagger: 0.03, ease: "none" });
+    });
+  });
   return (
     <>
       <span className="sr-only">{text}</span>
-      <motion.span aria-hidden initial="off" animate="on" transition={{ delayChildren: stagger(reduce ? 0 : 0.03) }}>
+      <span ref={root} aria-hidden>
         {[...text].map((c, i) => (
-          <motion.span key={i} variants={{ off: { opacity: 0 }, on: { opacity: 1 } }} transition={{ duration: 0 }}>
-            {c}
-          </motion.span>
+          <span key={i}>{c}</span>
         ))}
-      </motion.span>
+      </span>
     </>
   );
 }
 ```
-- **Perf**: ~40 spans per line, with opacity steps only and no layout shift. There's deliberately no `aria-live`, because a chatty guide is noise for screen readers.
+- Opacity steps only, so there's no reflow. The full line is in `sr-only` and there's deliberately no `aria-live`. **Reduced motion**: the whole line shows at once.
 
 ## 3. Chapter transitions
-### 3a. Title page reveal (`InkWipe.tsx`), inside the server title panel
+### 3a. Title ink wipe (`ink-wipe.tsx`). §9c `IslandTitle` is the upgraded version; keep this for non-chapter headings
 ```tsx
 "use client";
-import { motion } from "motion/react";
+import { useRef } from "react";
+import { gsap, MQ, useGSAP } from "@/lib/gsap";
 
-// <header className="relative overflow-hidden"><h2>Ch.5 The AI Arc</h2><InkWipe /></header>
+// <header className="relative overflow-hidden"><h2>…</h2><InkWipe /></header>
 export function InkWipe() {
-  return (
-    <motion.div
-      aria-hidden
-      className="absolute inset-0 z-10 origin-right bg-ink"
-      initial={{ scaleX: 1 }}
-      whileInView={{ scaleX: 0 }}
-      viewport={{ once: true, amount: 0.5 }}
-      transition={{ duration: 0.55, ease: [0.7, 0, 0.3, 1] }}
-    />
-  );
+  const el = useRef<HTMLDivElement>(null);
+  useGSAP(() => {
+    const mm = gsap.matchMedia();
+    mm.add(MQ.ok, () => {
+      gsap.to(el.current, { scaleX: 0, duration: 0.55, ease: "power3.inOut", scrollTrigger: { trigger: el.current, start: "top 75%", once: true } });
+    });
+    mm.add(MQ.reduce, () => {
+      gsap.set(el.current, { scaleX: 0 });
+    });
+  });
+  return <div ref={el} aria-hidden className="absolute inset-0 z-10 origin-right bg-ink" />;
 }
 ```
-- **Reduced motion**: `MotionConfig` snaps the wipe to `scaleX(0)` instantly. **Perf**: `scaleX` stays on the compositor, which is cheaper than animating `clip-path: inset()` (that repaints). The `h2` is server HTML, so SEO and AT are unaffected. Known ceiling: with JS disabled the ink sheet stays in place over the title. Accepted for a JS-required portfolio.
+- **Reduced motion**: `scaleX(0)` at once. **Known ceiling**: without JS the sheet covers the title (accepted for a JS-required portfolio).
 
-### 3b. Panels staggering in: **pure CSS** (scroll-driven), with zero JS and no client boundary
+### 3b. Panels staggering in: **pure CSS** (unchanged)
 ```css
 /* globals.css. Server markup: <div className="panel panel-in" style={{ "--i": i } as React.CSSProperties}> */
 @keyframes panel-in { from { opacity: 0; transform: translateY(24px) scale(0.98); } }
@@ -285,37 +270,43 @@ export function InkWipe() {
   }
 }
 ```
-- **Fallback**: browsers without scroll-timeline support (older Firefox) and reduced-motion users get static, fully visible panels. **Perf**: runs off the main thread on the compositor. It reverses on scroll-up, which suits panels. If one-shot reveals are wanted instead, copy `InkWipe`'s `whileInView` + `once` pattern into a `Reveal` client leaf.
 
-## 4. B&W → color reveal (`ColorReveal.tsx`)
-**Pick: CSS `filter: grayscale()` animated once, ending at `filter: none`.** The overlay approach (a stacked gray copy fading out) doubles image bytes and decodes for every screenshot. Motion runs `filter` through WAAPI (it's in `acceleratedValues`), so Chrome composites the 0.8 s fade, and `transitionEnd` removes the filter afterwards. The steady-state cost is 0, and no lingering filter creates a stacking context that would break `position: fixed` children.
+## 4. B&W → color reveal, one-shot (`color-reveal.tsx`) for Gaiden screenshots
 ```tsx
 "use client";
-import { motion } from "motion/react";
+import { useRef } from "react";
+import { gsap, MQ, useGSAP } from "@/lib/gsap";
 
-// Wrap the media of a color chapter, not the whole section (smaller filter texture).
+// Wrap the media of a color chapter (Gaiden screenshots), not the whole section.
 export function ColorReveal({ children }: { children: React.ReactNode }) {
+  const el = useRef<HTMLDivElement>(null);
+  useGSAP(() => {
+    const mm = gsap.matchMedia();
+    mm.add(MQ.ok, () => {
+      gsap.to(el.current, {
+        filter: "grayscale(0)",
+        duration: 0.8,
+        ease: "power1.out",
+        clearProps: "filter", // steady state: no filter, no stacking context
+        scrollTrigger: { trigger: el.current, start: "top 70%", once: true },
+      });
+    });
+  });
   return (
-    <motion.div
-      className="color-reveal"
-      initial={{ filter: "grayscale(1)" }}
-      whileInView={{ filter: "grayscale(0)", transitionEnd: { filter: "none" } }}
-      viewport={{ once: true, amount: 0.3 }}
-      transition={{ duration: 0.8, ease: "easeOut" }}
-    >
+    <div ref={el} className="color-reveal" style={{ filter: "grayscale(1)" }}>
       {children}
-    </motion.div>
+    </div>
   );
 }
 ```
 ```css
 @media (prefers-reduced-motion: reduce) { .color-reveal { filter: none !important; } } /* color shown, no fade */
 ```
-- `children` stay server components. The SSR output contains `grayscale(1)`, so there's no color flash before hydration. Wrap image grids, not text blocks (text is ink already), to keep the filtered area small.
+- SSR ships `grayscale(1)`, so there's no color flash. `clearProps` drops the filter afterwards, which leaves zero steady-state cost and no stacking context. The scrubbed AI Arc flood is §9d.
 
-## 5. Focus/speed-line hero background: CSS only, server component
+## 5. Focus/speed-line hero background: CSS only (unchanged)
 ```tsx
-// FocusLines.tsx (no "use client"). Place first inside the cover section (relative isolate overflow-hidden).
+// focus-lines.tsx (server). First child of the cover section (relative isolate overflow-hidden).
 export function FocusLines() {
   return <div aria-hidden className="focus-lines pointer-events-none absolute -inset-1/4 -z-10" />;
 }
@@ -323,177 +314,104 @@ export function FocusLines() {
 ```css
 .focus-lines {
   background: repeating-conic-gradient(from 0deg at 50% 50%, var(--ink) 0 0.6deg, transparent 0.6deg 5deg);
-  mask-image: radial-gradient(circle at 50% 50%, transparent 26%, #000 72%); /* clear center for the character */
-  animation: focus-in 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) both; /* one zoom on load */
+  mask-image: radial-gradient(circle at 50% 50%, transparent 26%, #000 72%);
+  animation: focus-in 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 @keyframes focus-in { from { scale: 1.15; opacity: 0; } }
 @supports (animation-timeline: scroll()) {
   .focus-lines { animation: focus-in 1.2s cubic-bezier(0.2, 0.8, 0.2, 1) both, focus-spin linear both; animation-timeline: auto, scroll(root); animation-range: normal, 0 100vh; }
 }
-@keyframes focus-spin { to { rotate: 6deg; } } /* separate property from `scale`: no conflict */
+@keyframes focus-spin { to { rotate: 6deg; } }
 @media (prefers-reduced-motion: reduce) { .focus-lines { animation: none; } }
 ```
-- **Motion**: one load zoom, then a slow rotate that only moves while the user scrolls. There's no infinite loop, so WCAG 2.2.2 (pause control) isn't triggered. **Perf**: the gradient and mask are rasterized once, and `scale`/`rotate` only move the layer. `-inset-1/4` keeps the rotated corners off-screen. **Reduced motion**: static lines.
 
 ## 6. Reading progress + chapter nav
-### 6a. Ink bar (`ReadingProgress.tsx`)
+### 6a. Ink bar (`reading-progress.tsx`). Optional now that §9a shows progress; keep it for mobile
 ```tsx
 "use client";
-import { motion, useScroll } from "motion/react";
+import { useRef } from "react";
+import { gsap, useGSAP } from "@/lib/gsap";
 
+// 1:1 with the user's own scroll, so it isn't autonomous motion: no reduced-motion branch needed.
 export function ReadingProgress() {
-  const { scrollYProgress } = useScroll();
-  return <motion.div aria-hidden style={{ scaleX: scrollYProgress }} className="fixed inset-x-0 top-0 z-50 h-[3px] origin-left bg-ink" />;
+  const el = useRef<HTMLDivElement>(null);
+  useGSAP(() => {
+    gsap.fromTo(el.current, { scaleX: 0 }, { scaleX: 1, ease: "none", scrollTrigger: { start: 0, end: "max", scrub: true } });
+  });
+  return <div ref={el} aria-hidden style={{ transform: "scaleX(0)" }} className="fixed inset-x-0 top-0 z-50 h-[3px] origin-left bg-ink" />;
 }
 ```
-- **Reduced motion**: none needed. The bar is 1:1 with the user's own scroll, so it isn't autonomous motion. **Perf**: a single `scaleX`. A zero-JS alternative is `animation-timeline: scroll(root)` on a `scaleX` keyframe; swap to it if bundle trimming matters (it stays static without support).
+### 6b. Chapter rail: **replaced** by the existing `chapter-nav.tsx` (top bar; swap its `<meter>` for §9a's `GearMeter`) plus the §9a Grand Line chart on desktop. Both keep the rail's contract: `aria-current`, `sr-only` names and ≥44 px targets.
 
-### 6b. Chapter rail, active state (`ChapterRail.tsx`)
-```tsx
-"use client";
-import { motion } from "motion/react";
-import { useActiveChapter } from "./useActiveChapter";
+## 7. Building the character so it feels alive (art strategy unchanged; tooling now CSS + GSAP)
+| Option | Life it buys | Extra art | Verdict |
+|---|---|---|---|
+| a) Pose swaps (one WebP per pose) | Leaps, squash/stretch, lean, breathing; the face is frozen | None | Base layer |
+| **a+) Pose swaps + 2 face overlays per pose** | Plus blinking and a mouth flap synced to the typewriter | 2 tiny overlays per pose | **PICK** for the guide |
+| b) Layered rig | Arm/head motion | 5+ parts per pose | **Only for the Luffy Gear art** (doc 10), where a stretch is the point: §9f |
+| c) Inline SVG with `<g>` parts | Same as a+ | Named groups | Only if the art arrives as clean SVG < 30 KB per pose |
 
-export function ChapterRail({ chapters }: { chapters: { id: string; label: string; name: string }[] }) {
-  const active = useActiveChapter();
-  return (
-    <nav aria-label="Chapters" className="fixed right-2 top-1/2 z-40 hidden -translate-y-1/2 md:block">
-      <ol className="flex flex-col gap-1">
-        {chapters.map((c) => (
-          <li key={c.id}>
-            <a href={`#${c.id}`} aria-current={active === c.id ? "true" : undefined} className="relative isolate grid min-h-11 min-w-11 place-items-center border-2 border-ink text-sm aria-[current=true]:text-paper">
-              {active === c.id && <motion.span layoutId="rail-ink" className="absolute inset-0 -z-10 bg-ink" />}
-              {c.label}<span className="sr-only">: {c.name}</span>
-            </a>
-          </li>
-        ))}
-      </ol>
-    </nav>
-  );
-}
-```
-- `layoutId` is the right tool here, unlike §1: both ends live in the same fixed container, so the ink block slides between tabs with no scroll-measurement issues. **Reduced motion**: `MotionConfig` disables layout animation, so the block jumps. **Perf**: one transform per chapter change. Add `html { scroll-behavior: smooth }` under `prefers-reduced-motion: no-preference` for the anchor jumps. The mobile "Ch.4 / 5" pill can reuse `useActiveChapter()` as is.
-
-## Open items for Engineering
-- Ranges in §1 are tuned for a `100svh` cover and the 1200 × 1600 pose canvas. Re-tune the clip split (40/60) and the tear position against the real art.
-- Tokens assumed: `--ink`, `--paper`, utilities `bg-ink`, `border-ink`, `text-paper`, and the classes `.bubble` and `.sfx`. Take their final names from `03-design-spec.md`.
-
----
-
-# Character Build & Chapter Travel (RND-004)
-Status: DONE · 2026-10-02 · All code below was type-checked against a scratch copy of the real `src/types/index.ts` + `src/data/chapters.ts` (plus the proposed `perch` field) and linted with the project eslint config (0 problems). `perchToXY` passes its assert check. Nothing in `src/` was edited.
-
-## 7. Building the character so it feels alive
-| Option | Life it buys | Extra art | Engineering | Perf | Verdict |
-|---|---|---|---|---|---|
-| a) Pose swaps (one WebP per pose) + motion transforms | Leaps, squash/stretch, lean, breathing: whole-body life only; the face is frozen | None | Lowest | Best: one `<img>` | Base layer |
-| **a+) Pose swaps + 2 face overlays per pose** | a) **plus** blinking and a mouth flap synced to the typewriter. That's most of the "alive" read at a 200px render size | 2 tiny transparent overlays per pose (~2-5 KB each) | +2 `<img>` + 3 CSS keyframes | Overlays toggle `opacity` with `steps()`: compositor only | **PICK** |
-| b) Layered rig (body/head/arm/eyelids/mouth) | Adds an arm-wave loop and head tilt | ~5 parts × 7 poses = 35+ cut parts with overlap-painted joints, pivot coordinates, and a matching cut line per pose | High: per-part pivots, seam bugs on rotation | 5-6 layers per pose | Not worth it: 3-5× the art cost, AI kits can't cut clean parts consistently, and the arm motion barely reads at 200px. Fake the wave with a 2-frame overlay (below) |
-| c) Inline SVG with grouped `<g>` parts | Same as a+ via `<g class="blink">`/`<g class="flap">`, no extra files | Groups named in the SVG | Same CSS as a+ | Traced manga art is often 100-500 KB / thousands of paths: bloats HTML, isn't cached, slow first raster | Only if the art arrives as clean SVG < 30 KB per pose. The same CSS applies to the `<g>`s |
-
-**Deliverables for a+ (artist or AI art kit).** Every file uses the same canvas and registration as its base pose (1200 × 1600; `02` 1600 × 1600; `07` 512 × 512) with a transparent background:
-| File | Poses | Content |
-|---|---|---|
-| `<pose>.webp` | 01-07 (placeholders exist) | Base pose as a **color master** (§8.5 derives B&W with `grayscale`) |
-| `<pose>.blink.webp` | 01, 03, 04, 05, 06, 07 | Closed eyelids only (painted over the open eyes); everything else transparent |
-| `<pose>.talk.webp` | 01, 04, 05, 06, 07 | Open mouth only; everything else transparent |
-| `01-wave-hello.arm2.webp` (optional) | 01 | Waving arm at its 2nd angle, for a 2-frame wave loop (same `steps()` trick as blink) |
-| `08-leap.webp` (optional) | new | Mid-air stretched pose. Without it, `enterPose ?? 03-walk` is shown in the air |
-| `<pose>.bw.webp` (optional) | any | Hand-inked B&W version, only if `grayscale(1)` of the color master looks muddy |
-| Layered PSD/CSP source | all | So overlays can be re-cut later |
-
-**Face overlays recipe** (inside `.guide-alive` in `Traveler`, after the base image; raw `<img>` so preload URLs match):
+Overlay deliverables (`<pose>.blink.webp`, `<pose>.talk.webp`, optional `.arm2`, `08-leap`, `.bw`) and their CSS are unchanged:
 ```tsx
 <img src={`/guide/${pose}.blink.webp`} alt="" className="blink absolute inset-0 size-full object-contain" />
 <img src={`/guide/${pose}.talk.webp`} alt="" className="flap absolute inset-0 size-full object-contain"
-  style={{ animationIterationCount: Math.ceil((section.guide.line.length * 0.03) / 0.24) }} /> {/* flaps while 30ms/char types */}
+  style={{ animationIterationCount: Math.ceil((section.guide.line.length * 0.03) / 0.24) }} />
 ```
 ```css
 .guide-alive { animation: breathe 2.8s ease-in-out infinite alternate; transform-origin: bottom; }
-@keyframes breathe { to { scale: 1 1.015; } }      /* `scale` property: no clash with motion's transform on the parent */
+@keyframes breathe { to { scale: 1 1.015; } }      /* `scale` property on the INNER box: GSAP transforms the outer layer */
 .blink { opacity: 0; animation: blink 4.2s steps(1) infinite; }
 @keyframes blink { 0%, 95% { opacity: 0; } 96%, 98% { opacity: 1; } }
 .flap { opacity: 0; animation: flap 0.24s steps(1); }
 @keyframes flap { 50% { opacity: 1; } }
-.bubble-life { animation: bubble-life 5.3s forwards; }   /* design spec: bubble auto-hides after 5s */
+.bubble-life { animation: bubble-life 5.3s forwards; }
 @keyframes bubble-life { 0% { opacity: 0; scale: 0.85; } 5%, 94% { opacity: 1; scale: 1; } 100% { opacity: 0; visibility: hidden; } }
 @media (prefers-reduced-motion: reduce) { .guide-alive, .blink, .flap, .bubble-life { animation: none; } }
 ```
-Infinite breathing and blinking are decorative. "Hide guide" is the WCAG 2.2.2 pause control, and reduced motion turns them off. Overlay `<img>` lines need `{/* eslint-disable-next-line @next/next/no-img-element */}`.
-
-**Pose transitions, the manga way. Pick: squash/stretch on takeoff and landing + an ink-poof that hides the swap.**
-- Crossfade: rejected. Two half-transparent bodies read as a ghost, not manga.
-- Smear frame: needs a drawn smear per transition (art cost).
-- Ink-poof (ドロン cloud): this is how manga hides a costume or pose change. It's 7 SVG blots doing `scale`/`opacity` for 280 ms, re-keyed on every pose change, and the swap happens under it. Squash/stretch (`scaleY` with inverse `scaleX`) is free and sells weight.
+**Ink-poof (ドロン cloud), now CSS-only**: it hides each pose swap. Re-key it on every pose change.
 ```tsx
-// InkPoof.tsx
-"use client";
-import { motion } from "motion/react";
-
-// Manga ドロン cloud. Re-keyed on every pose change: it hides the swap frame, so there's no double image.
+// Server-safe, CSS-only (.ink-poof keyframes). Re-key on every pose change: it hides the swap frame.
 const BLOTS = [[20, 50, 16], [42, 30, 20], [66, 34, 17], [84, 56, 14], [34, 70, 18], [62, 72, 19], [50, 52, 22]];
 export function InkPoof() {
   return (
-    <motion.svg
-      viewBox="0 0 100 100"
-      className="pointer-events-none absolute inset-0 size-full"
-      initial={{ scale: 0.5, opacity: 1 }}
-      animate={{ scale: 1.4, opacity: 0 }}
-      transition={{ duration: 0.28, ease: "easeOut" }}
-    >
+    <svg viewBox="0 0 100 100" aria-hidden className="ink-poof pointer-events-none absolute inset-0 size-full">
       {BLOTS.map(([cx, cy, r]) => (
         <circle key={`${cx}-${cy}`} cx={cx} cy={cy} r={r} fill="var(--paper)" stroke="var(--ink)" strokeWidth={2} />
       ))}
-    </motion.svg>
+    </svg>
   );
 }
 ```
 
 ## 8. Chapter travel: one fixed layer, leaps between perches
-**Pick: the chapter observer (§2a) sets the target perch, and `animate()` flies the layer there on a keyframed arc.** I rejected a scroll-scrubbed path (`useScroll` + `useTransform` keyed to measured chapter offsets) for three reasons: he'd hang mid-air whenever the reader stops scrolling, the offsets need re-measuring on every resize, font or image load, and fast flings teleport him. Event-driven leaps are time-based, always land, and interrupt cleanly, because a newer `animate()` on the same motion value stops the old one. `useScroll` still adds life: scroll velocity → spring → a ±6° lean.
+**Unchanged pick: event-driven leaps, not a scroll-scrubbed path.** A scrubbed path leaves him hanging mid-air when the reader stops, and fast flings teleport him. Leaps are time-based, always land, and interrupt cleanly (`killTweensOf` + restart from the current position). Scroll velocity still adds a ±6° lean.
 
-### 8.1 Storyboard (desktop)
+### 8.1 Storyboard (desktop): unchanged
 ```
  SCROLL    SECTION (mode)            GUIDE ACTION                                PERCH / MOVE
- ──────────────────────────────────────────────────────────────────────────────────────────────
- 0         COVER (color)             01 wave-hello  "Hello!"     ┌──────────┐   inside hero panel (§1a)
-                                                                 │   \o/    │
- p .15-.3  cover scrolls             02 break-out: tear, cracks  │ ▔▔╲o╱▔▔  │   BreakOut (§1b) + バリッ
-                                     + one impact frame          └───/ \────┘
- p .5      hand-off                  hero copy fades; fixed layer jump-cuts to center/mid (invisible)
- ──────────────────────────────────────────────────────────────────────────────────────────────
- Ch.1      The Beginning (bw)        crouch, arc ⌒, poof, 04 point             left  mid    peek   |o
- Ch.2      Academy Arc (bw)          ⌒ leap across, 05 think                    right top    ledge  o? on ▔▔▔
- Ch.3      First Quest (duo)         ⌒ 04 point                                 left  bottom free
- Ch.4      Forging the Blade (duo)   ⌒ 04 point                                 right mid    peek   o|
- Ch.5      The AI Arc (COLOR)        ⌒ in 03 walk, lands 04 point;             left  top    ledge
-                                     grayscale -> color over 700ms  "And then the world got color."
- Gaiden    Side Stories (color)      ⌒ 04 point                                 right bottom free
- Status    Status Window (night)     ⌒ 05 think (grayscale again)               left  mid    peek
- Finale    To Be Continued (color)   flat walk in 03 walk to the CTA, 06 wave-bye   center bottom walk
-                                     "...written with you."      [ Send ] o/     target [data-guide-target]
- MOBILE   64px bust bottom-left, 16px hop per chapter, tap for bubble.
- REDUCED  no travel: jump cut to each perch, 300ms pose fade, no poof/lean/idle loops.
+ cover     COVER (color)             01 wave-hello → 02 break-out + バリッ        inside hero (§1)
+ p .5      hand-off                  fixed layer jump-cuts to its first perch (invisible)
+ Ch.1-4    bw / duo                  crouch, arc ⌒, poof, pose                  left/right · top/mid/bottom · peek/ledge/free
+ Ch.5      The AI Arc (COLOR)        lands 04 point; grayscale → color with the §9d Gear 5 flood
+ Gaiden … Finale                     ⌒ leaps; finale walks to the CTA [data-guide-target], 06 wave-bye
+ MOBILE   64px bust bottom-left, CSS hop per chapter, tap for bubble.
+ REDUCED  jump cut to each perch, 300 ms pose fade, no poof/lean/idle loops.
 ```
 
-### 8.2 Data: proposed `guide.perch` (proposal only; the Senior Dev owns `src/types` + `src/data/chapters.ts`)
+### 8.2 Data: proposed `guide.perch` (Senior Dev owns `src/types`)
 ```ts
-// src/types/index.ts: add `perch?: Perch` to Guide ({ pose, line, enterPose?, perch? })
-/** Viewport-relative perch of the one fixed guide layer (desktop). */
+// src/types/index.ts: add `perch?: Perch` to Guide
 export type Perch = {
   side: "left" | "right" | "center";
   y: "top" | "mid" | "bottom";
-  /** peek = half off-screen from the gutter; ledge = stands on a drawn panel-border strip; free = standing. */
   spot: "peek" | "ledge" | "free";
-  /** leap = jump arc (default); walk = flat walk (finale); none = jump cut (cover). */
   move?: "leap" | "walk" | "none";
-  /** Optional CSS selector to land beside (finale CTA). Measured once on landing; wins over side/y. */
-  target?: string;
+  target?: string; // CSS selector to land beside (finale CTA: [data-guide-target], already on the Send button)
 };
 ```
-Values per the storyboard (a missing `perch` falls back to `DEFAULT_PERCH` = right/bottom/free): `cover {center,mid,free,move:"none"}` · `the-beginning {left,mid,peek}` · `academy-arc {right,top,ledge}` · `first-quest {left,bottom,free}` · `forging-the-blade {right,mid,peek}` · `the-ai-arc {left,top,ledge}` · `gaiden {right,bottom,free}` · `status-window {left,mid,peek}` · `finale {center,bottom,free,move:"walk",target:"[data-guide-target]"}`. Put `data-guide-target` on the finale's contact CTA. The section contract is unchanged (§0): `<section id={part.id} data-chapter={part.id}>`.
+Values: `cover {center,mid,free,move:"none"}` · `the-beginning {left,mid,peek}` · `academy-arc {right,top,ledge}` · `first-quest {left,bottom,free}` · `forging-the-blade {right,mid,peek}` · `the-ai-arc {left,top,ledge}` · `gaiden {right,bottom,free}` · `status-window {left,mid,peek}` · `finale {center,bottom,free,move:"walk",target:"[data-guide-target]"}`.
 
-### 8.3 Perch math (`perch.ts`) + its one check
+### 8.3 Perch math (`perch.ts`), unchanged, plus its check (`node --experimental-strip-types perch.check.ts` → "perch ok")
 ```ts
 import type { Perch } from "@/types";
 
@@ -512,7 +430,6 @@ export function perchToXY(p: Perch, vw: number, vh: number, w = GUIDE_W, h = GUI
 }
 ```
 ```ts
-// perch.check.ts: `node --experimental-strip-types perch.check.ts` prints "perch ok" (verified)
 import assert from "node:assert";
 import { perchToXY } from "./perch.ts";
 const vw = 1440, vh = 900;
@@ -524,82 +441,111 @@ assert.deepEqual(perchToXY({ side: "center", y: "bottom", spot: "peek" }, vw, vh
 console.log("perch ok");
 ```
 
-### 8.4 Travel engine (`useLeap.ts`): arc, squash/stretch, pose state machine
-The state machine runs `perched(pose)` → section change → `airborne(enterPose ?? "03-walk")` → land → `perched(new pose)` + poof + bubble. A newer section mid-air restarts it from the current position, so it can't get stuck.
+### 8.4 Travel engine (`use-leap.ts`): arc, squash/stretch, interrupt
 ```ts
 "use client";
-import { useEffect, useState } from "react";
-import { animate, useMotionValue, useReducedMotion } from "motion/react";
+import { useRef, useState, type RefObject } from "react";
+import { gsap, MQ, useGSAP } from "@/lib/gsap";
 import type { Perch } from "@/types";
 import { GUIDE_H, GUIDE_W, perchToXY } from "./perch";
 
-// Moves the fixed guide layer to `perch` whenever the active section `id` changes.
-export function useLeap(id: string, perch: Perch) {
-  const reduce = useReducedMotion();
-  const x = useMotionValue(-200), y = useMotionValue(300), sy = useMotionValue(1);
+const place = (p: Perch) => {
+  const r = p.target ? document.querySelector(p.target)?.getBoundingClientRect() : undefined;
+  return r ? { x: r.left - GUIDE_W - 16, y: r.bottom - GUIDE_H } : perchToXY(p, innerWidth, innerHeight);
+};
+
+// Flies the fixed guide layer to `perch` whenever the active section `id` changes.
+// Arc = x tween + y keyframes [apex, target]; squash/stretch on scaleX/scaleY (volume kept: sx ≈ 2 - sy).
+export function useLeap(layer: RefObject<HTMLDivElement | null>, id: string, perch: Perch) {
   const [airborne, setAirborne] = useState(false);
-  useEffect(() => {
-    const place = () => {
-      const r = perch.target ? document.querySelector(perch.target)?.getBoundingClientRect() : undefined;
-      return r ? { x: r.left - GUIDE_W - 16, y: r.bottom - GUIDE_H } : perchToXY(perch, innerWidth, innerHeight);
-    };
-    const onResize = () => { const p = place(); x.jump(p.x); y.jump(p.y); };
+  const current = useRef(perch); // latest perch for the resize handler (written in the effect, not in render)
+
+  // Resize = jump cut to the current perch. Registered once; useGSAP removes it on unmount.
+  useGSAP(() => {
+    const onResize = () => gsap.set(layer.current, place(current.current));
     addEventListener("resize", onResize);
-    const off = () => removeEventListener("resize", onResize);
-    const { x: tx, y: ty } = place();
-    if (reduce || perch.move === "none" || !matchMedia("(min-width: 768px)").matches) { onResize(); return off; } // jump cut
-    let live = true;
-    const walk = perch.move === "walk", d = walk ? 1.2 : 0.6;
-    const peak = walk ? ty - 8 : Math.min(y.get(), ty) - 120; // arc apex above the higher end
-    (async () => {
+    return () => removeEventListener("resize", onResize);
+  });
+
+  useGSAP(
+    () => {
+      current.current = perch;
+      const el = layer.current;
+      if (!el) return;
+      gsap.killTweensOf(el); // a newer chapter mid-air restarts from the current position
+      const { x: tx, y: ty } = place(perch);
+      if (perch.move === "none" || !matchMedia(MQ.desk).matches) {
+        gsap.set(el, { x: tx, y: ty, scaleX: 1, scaleY: 1 }); // jump cut: mobile, reduced motion, cover
+        setAirborne(false);
+        return;
+      }
+      const walk = perch.move === "walk", d = walk ? 1.2 : 0.6;
+      const peak = walk ? ty - 8 : Math.min(Number(gsap.getProperty(el, "y")), ty) - 120; // apex above the higher end
       setAirborne(true);
-      if (!walk) await animate(sy, 0.85, { duration: 0.08 }); // anticipation crouch
-      await Promise.all([
-        animate(x, tx, { duration: d, ease: walk ? "linear" : [0.3, 0, 0.3, 1] }),
-        animate(y, [y.get(), peak, ty], { duration: d, times: [0, 0.45, 1], ease: ["easeOut", "easeIn"] }),
-        animate(sy, walk ? 1 : [1.12, 1], { duration: d }), // stretch in the air
-      ]);
-      if (!live) return; // a newer chapter took over mid-air; its animate() already stopped ours
-      setAirborne(false);
-      animate(sy, [0.86, 1], { type: "spring", stiffness: 500, damping: 14 }); // landing squash
-    })();
-    return () => { live = false; off(); };
-  }, [id, perch, reduce, x, y, sy]);
-  return { x, y, sy, airborne, reduce };
+      const tl = gsap.timeline({ onComplete: () => setAirborne(false) });
+      if (!walk) tl.to(el, { scaleY: 0.85, scaleX: 1.15, duration: 0.08 }); // anticipation crouch
+      tl.addLabel("air")
+        .to(el, { x: tx, duration: d, ease: walk ? "none" : "power1.inOut" }, "air")
+        .to(el, { keyframes: [{ y: peak, duration: d * 0.45, ease: "power2.out" }, { y: ty, duration: d * 0.55, ease: "power2.in" }] }, "air")
+        .to(el, { scaleY: walk ? 1 : 1.12, scaleX: walk ? 1 : 0.88, duration: d * 0.4 }, "air") // stretch in the air
+        .fromTo(el, { scaleY: 0.86, scaleX: 1.14 }, { scaleY: 1, scaleX: 1, duration: 0.5, ease: "elastic.out(1, 0.35)", immediateRender: false }); // landing squash
+    },
+    { dependencies: [id, perch] },
+  );
+  return airborne;
 }
 ```
-- **Arc**: `x` eases across while `y` runs `[start, apex, target]` keyframes, with ease-out going up and ease-in coming down, which gives a parabola. The walk is the same call with an 8px bob and linear `x`. `perch` objects are module constants from `chapters.ts`, so the deps are stable.
+- The arc is a linear-ish `x` plus `y` keyframes (ease-out up, ease-in down), which gives a parabola. `dependencies: [id, perch]` without `revertOnUpdate`, so a new chapter doesn't snap him back. `killTweensOf` stops the old leap mid-air. `perch` objects are module constants from `chapters.ts`, so the deps are stable.
 
-### 8.5 The layer (`Traveler.tsx`): pose swap, B&W → color, bubble, scroll lean
+### 8.5 The layer (`traveler.tsx`): pose swap, B&W → color, bubble, scroll lean
 ```tsx
 "use client";
-import { AnimatePresence, motion, useScroll, useSpring, useTransform, useVelocity } from "motion/react";
+import { useRef } from "react";
+import { gsap, MQ, ScrollTrigger, useGSAP } from "@/lib/gsap";
 import type { Part } from "@/types";
-import { InkPoof } from "./InkPoof";
+import { InkPoof } from "./ink-poof";
 import { DEFAULT_PERCH, GUIDE_H, GUIDE_W } from "./perch";
-import { Typewriter } from "./Typewriter";
-import { useLeap } from "./useLeap";
+import { Typewriter } from "./typewriter";
+import { useLeap } from "./use-leap";
 
 export const poseSrc = (pose: string) => `/guide/${pose}.webp`;
 
 // The one fixed character layer (desktop). Mobile + toggle live in GuideDock.
 export function Traveler({ section, hidden }: { section: Part; hidden: boolean }) {
+  const layer = useRef<HTMLDivElement>(null);
   const perch = section.guide.perch ?? DEFAULT_PERCH;
-  const { x, y, sy, airborne, reduce } = useLeap(section.id, perch);
-  const sx = useTransform(sy, (v) => 2 - v); // keep volume: squash = wider, stretch = thinner
-  const { scrollY } = useScroll();
-  const lean = useTransform(useSpring(useVelocity(scrollY), { stiffness: 300, damping: 40 }), [-3000, 3000], [-6, 6]);
+  const airborne = useLeap(layer, section.id, perch);
+
+  // Scroll lean: velocity kicks rotation up to ±6°, then it eases back to 0 (GSAP "skew on scroll" pattern).
+  useGSAP(() => {
+    const mm = gsap.matchMedia();
+    mm.add(MQ.desk, () => {
+      const proxy = { r: 0 }, clamp = gsap.utils.clamp(-6, 6);
+      const setR = gsap.quickSetter(layer.current, "rotation", "deg");
+      ScrollTrigger.create({
+        onUpdate: (self) => {
+          const r = clamp(self.getVelocity() / 500);
+          if (Math.abs(r) <= Math.abs(proxy.r)) return;
+          proxy.r = r;
+          gsap.to(proxy, { r: 0, duration: 0.8, ease: "power3", overwrite: true, onUpdate: () => setR(proxy.r) });
+        },
+      });
+    });
+  });
+
   const pose = airborne ? (section.guide.enterPose ?? "03-walk") : section.guide.pose;
   const show = section.id !== "cover" && !hidden; // cover: BreakOut owns him
   return (
-    <motion.div aria-hidden style={{ x, y, scaleX: sx, scaleY: sy, rotate: reduce ? 0 : lean, width: GUIDE_W, height: GUIDE_H }}
-      animate={{ opacity: show ? 1 : 0 }} className="pointer-events-none fixed left-0 top-0 z-40 hidden origin-bottom md:block">
+    <div
+      ref={layer}
+      aria-hidden
+      style={{ width: GUIDE_W, height: GUIDE_H, opacity: show ? 1 : 0 }}
+      className="pointer-events-none fixed left-0 top-0 z-40 hidden origin-bottom transition-opacity md:block"
+    >
       <div className={`guide-alive relative size-full transition-[filter] duration-700 ${section.colorMode === "color" ? "" : "grayscale"}`}>
-        <AnimatePresence initial={false}>
-          <motion.img key={pose} src={poseSrc(pose)} alt="" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            transition={{ duration: reduce ? 0.3 : 0.05 }} className="absolute inset-0 size-full object-contain" />
-        </AnimatePresence>
-        {!reduce && <InkPoof key={pose} />}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img key={pose} src={poseSrc(pose)} alt="" className="pose-in absolute inset-0 size-full object-contain" />
+        <InkPoof key={`poof-${pose}`} />
         {perch.spot === "ledge" && <span className="absolute -bottom-1 -left-1/4 h-1 w-[150%] bg-ink" />}
       </div>
       {show && !airborne && (
@@ -607,24 +553,23 @@ export function Traveler({ section, hidden }: { section: Part; hidden: boolean }
           <Typewriter text={section.guide.line} />
         </p>
       )}
-    </motion.div>
+    </div>
   );
 }
 ```
-- **Ch.5 color**: the art ships as color masters. Sections whose `colorMode` isn't `"color"` (bw/duo/night) get `grayscale` on the inner 150×200 box, and entering Ch.5 transitions it off over 700 ms (steady state is free). The story then reads B&W in Ch.1-4 → color in Ch.5, with color on the cover, Gaiden and finale. That's one art set, not two. If grayscale looks muddy, ship `<pose>.bw.webp` files and pick the file by mode in `poseSrc`.
-- **Bubble**: re-keyed per section, so it re-types, flaps, and auto-hides after 5 s. Design spec §9 makes the guide `aria-hidden` (every line's facts are in the section copy), so the bubble isn't announced. That's intended.
+- **Lean**: the GSAP "skew on scroll" pattern. Velocity kicks the rotation, a proxy tween eases it back, and `quickSetter` writes it. That's one transform per frame, shared with the leap.
+- **Ch.5 color**: non-`color` sections get `grayscale` on the 150×200 inner box (a 700 ms CSS transition).
 
-### 8.6 Owner, mobile, toggle, preload (`GuideDock.tsx`, replaces §2c; mount once at the end of `page.tsx`)
+### 8.6 Owner, mobile, toggle, preload (`guide-dock.tsx`; mount once in `guide-layer.tsx` behind the flag)
 ```tsx
 "use client";
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { AnimatePresence, motion } from "motion/react";
 import { chapters, parts } from "@/data/chapters";
 import type { Part } from "@/types";
-import { poseSrc, Traveler } from "./Traveler";
-import { Typewriter } from "./Typewriter";
-import { useActiveChapter } from "./useActiveChapter";
+import { poseSrc, Traveler } from "./traveler";
+import { Typewriter } from "./typewriter";
+import { useActiveChapter } from "./use-active-chapter";
 
 const ORDER: Part[] = [parts.cover, ...chapters, parts.gaiden, parts.status, parts.finale]; // reading order
 export function GuideDock() {
@@ -641,33 +586,554 @@ export function GuideDock() {
     <>
       <Traveler section={s} hidden={hidden} />
       <aside aria-label="Guide" className="fixed bottom-4 left-4 z-40 flex flex-col items-start gap-2 md:left-auto md:right-14 md:items-end">
-        <AnimatePresence mode="wait">
-          {id !== "cover" && !hidden && ( // mobile: re-keyed per chapter = a small hop
-            <motion.div key={id} animate={{ y: [0, -16, 0] }} exit={{ opacity: 0, transition: { duration: 0.1 } }} className="flex items-end gap-2 md:hidden">
-              <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-label="Guide: show message" className="relative size-16 overflow-hidden rounded-full border-[3px] border-ink bg-paper">
-                <Image src="/guide/07-bust.webp" alt="" fill sizes="64px" />
-              </button>
-              {open && <p className="bubble max-w-56"><Typewriter text={s.guide.line} /></p>}
-            </motion.div>
-          )}
-        </AnimatePresence>
-        {id !== "cover" && <button type="button" aria-pressed={hidden} onClick={() => setHidden((h) => !h)} className="min-h-11 px-3 text-sm underline">{hidden ? "Show guide" : "Hide guide"}</button>}
+        {id !== "cover" && !hidden && ( // mobile: re-keyed per chapter = a small CSS hop (.hop)
+          <div key={id} className="hop flex items-end gap-2 md:hidden">
+            <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-label="Guide: show message" className="relative size-16 overflow-hidden rounded-full border-[3px] border-ink bg-paper">
+              <Image src="/guide/07-bust.webp" alt="" fill sizes="64px" />
+            </button>
+            {open && <p className="bubble max-w-56"><Typewriter text={s.guide.line} /></p>}
+          </div>
+        )}
+        {id !== "cover" && (
+          <button type="button" aria-pressed={hidden} onClick={() => setHidden((h) => !h)} className="min-h-11 px-3 text-sm underline">
+            {hidden ? "Show guide" : "Hide guide"}
+          </button>
+        )}
       </aside>
     </>
   );
 }
 ```
-- **Mobile (<768px)**: `Traveler` is `display:none`, and `useLeap` jump-cuts (no animation work). The 64px bust hops 16px each chapter, and the bubble opens on tap.
-- **Reduced motion**: no travel (jump cut to each perch), no poof, no lean, no idle loops. The pose fades over 300 ms per chapter, and `MotionConfig` drops the mobile hop.
-- **Hide guide**: one toggle hides both the traveler and the mobile head, and it doubles as the pause control for the idle loops. There's no persistence across reloads (add `localStorage` if asked).
+- **Mobile**: the Traveler is `display:none`, and `useLeap` jump-cuts (`MQ.desk` fails). The 64px bust re-keys per chapter, which plays the CSS `.hop`. **Hide guide** is the pause control for the idle loops.
 
-### 8.7 Perf budget (target: 60 fps on a mid-range Android, Moto G / Galaxy A class)
-- **One composited layer**: x, y, scaleX, scaleY and rotate collapse into a single `transform` write per frame. Opacity and the `steps()` overlays stay on the compositor. The one filter is a static `grayscale` on a 150×200 box, transitioned once.
-- **JS per frame**: motion's rAF loop only runs during a 0.6 s leap and while the lean spring settles, well under 1 ms per frame. There are no scroll listeners (one IntersectionObserver). The only layout read is a single `getBoundingClientRect` on the finale landing.
-- **Bytes**: on screen at once, one pose ≤80 KB + overlays ~5 KB. The next section's `pose` + `enterPose` are preloaded on arrival, so swaps never flash blank. Total guide art is ~0.6 MB, spread lazily across the scroll. Mobile loads only the 512px bust.
-- **Verify**: DevTools Performance at 4× CPU throttle should show no long tasks and no "Layout" in leap frames. Then check on a real device via remote debugging.
+### 8.7 Perf budget (60 fps, mid-range Android)
+- One composited layer per moving thing. GSAP batches x/y/scale/rotation into one `transform` write per tick. There are no scroll listeners besides ScrollTrigger's single shared one.
+- Bytes: one pose ≤80 KB plus ~5 KB of overlays on screen. The next section's poses are preloaded.
+- Verify with DevTools Performance at 4× CPU: no long tasks and no "Layout" in leap or scrub frames.
 
 ### 8.8 Conflicts for the coordinator
-- **Design spec §7-8**: it specifies one `GuideCharacter` with a shared `layoutId="guide"` for the dock hand-off. This cookbook uses a fixed layer + `animate()` instead (reasons in §1 and §8). The spec's "Break-out 0.6-1 … layoutId hand-off" row should be updated.
-- **Pose file format**: the `PoseId` comment in `src/types` says `public/guide/<id>.svg`, but `public/guide/` holds `.webp`. The recipes use `.webp`.
-- **Dock hiding**: hiding the guide over the footer and while a form field has focus (design spec §9) isn't implemented. Add a `focusin`/`focusout` listener on the contact form if QA wants it.
+- Design spec §7-8 still says `layoutId` hand-off. That's obsolete: there's no `motion` anymore, so use the §1/§8 pattern.
+- `PoseId` comment: the files are `.webp` (unchanged note).
+
+## 9. One Piece recipes (RND-008)
+Chapter → Gear comes from `chapters[].gear` (1–5, already in `src/data/chapters.ts`). **Every recipe works with `siteConfig.features.luffy === false`.** Art layers are only added as server-rendered children behind the flag.
+
+### 9a. Grand Line chart nav + Gear meter (`grand-line-chart.tsx`, `gear-meter.tsx`)
+The ship (a Sunny-style hull with a lion figurehead dot) sails route segment *i* while section *i* scrolls (top-center → bottom-center). It docks exactly when the observer flips `aria-current` to the next island. The route inks in behind it. Pass it the same `contents: NavItem[]` that `page.tsx` builds for `ChapterNav`.
+```tsx
+"use client";
+import { useRef } from "react";
+import type { NavItem } from "@/components/chapter-nav";
+import { gsap, MQ, ScrollTrigger, useGSAP } from "@/lib/gsap";
+import { GearMeter } from "./gear-meter";
+import { useActiveChapter } from "./use-active-chapter";
+
+const W = 64, H = 560;
+
+// Desktop "Grand Line chart": islands = sections, the ship sails segment i while section i scrolls
+// (top-center → bottom-center), so it docks exactly when the observer marks the next island active.
+export function GrandLineChart({ items }: { items: NavItem[] }) {
+  const root = useRef<HTMLElement>(null);
+  const active = useActiveChapter();
+  const pts = items.map((_, i) => ({ x: i % 2 ? 44 : 20, y: 16 + (i * (H - 32)) / Math.max(1, items.length - 1) }));
+  const segs = pts.slice(1).map((p, i) => `M${pts[i].x} ${pts[i].y} Q${i % 2 ? 4 : 60} ${(pts[i].y + p.y) / 2} ${p.x} ${p.y}`);
+  const idx = items.findIndex((i) => i.id === active);
+  const gear = Math.max(0, ...items.slice(0, idx + 1).map((i) => i.gear ?? 0));
+
+  useGSAP(
+    () => {
+      const ship = root.current!.querySelector<SVGGElement>(".ship")!;
+      const wakes = root.current!.querySelectorAll<SVGPathElement>(".wake");
+      gsap.set(ship, pts[0]);
+      const mm = gsap.matchMedia();
+      mm.add({ ok: MQ.ok, reduce: MQ.reduce }, (ctx) => {
+        items.slice(0, -1).forEach((it, i) => {
+          const sec = document.getElementById(it.id);
+          if (!sec) return;
+          if (ctx.conditions?.reduce) { // no sailing: jump to the island, route fully drawn
+            gsap.set(wakes[i], { strokeDashoffset: 0 });
+            ScrollTrigger.create({ trigger: sec, start: "bottom center", onEnter: () => gsap.set(ship, pts[i + 1]), onLeaveBack: () => gsap.set(ship, pts[i]) });
+            return;
+          }
+          gsap.timeline({ defaults: { ease: "none" }, scrollTrigger: { trigger: sec, start: "top center", end: "bottom center", scrub: 0.6 } })
+            .to(ship, { motionPath: { path: wakes[i] } }, 0) // not aligned: path coords = the ship's x/y (ship is drawn around 0,0)
+            .to(wakes[i], { strokeDashoffset: 0 }, 0); // ink the route behind it
+        });
+      });
+    },
+    { scope: root },
+  );
+
+  return (
+    <nav ref={root} aria-label="Chapter chart" className="grand-line fixed right-2 top-1/2 z-40 -translate-y-1/2" style={{ width: W }}>
+      <GearMeter gear={gear} />
+      <div className="relative" style={{ height: H }}>
+        <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} aria-hidden className="absolute inset-0 overflow-visible">
+          {segs.map((d) => (
+            <path key={`r-${d}`} d={d} fill="none" stroke="var(--ink)" strokeOpacity={0.25} strokeDasharray="3 4" />
+          ))}
+          {segs.map((d) => (
+            <path key={`w-${d}`} className="wake" d={d} pathLength={1} strokeDasharray={1} strokeDashoffset={1} fill="none" stroke="var(--ink)" strokeWidth={2} />
+          ))}
+          {pts.map((p, i) => (
+            <circle key={items[i].id} cx={p.x} cy={p.y} r={5} stroke="var(--ink)" strokeWidth={2} fill={i <= idx ? "var(--ink)" : "var(--paper)"} />
+          ))}
+          <g className="ship">
+            <path d="M-9 1 H9 L6 7 H-6 Z M0 1 V-11 M0 -10 L8 -3 H0" fill="var(--paper)" stroke="var(--ink)" strokeWidth={1.5} strokeLinejoin="round" />
+            <circle cx={9} cy={1} r={2.5} fill="var(--accent, var(--ink))" /> {/* figurehead */}
+          </g>
+        </svg>
+        <ol>
+          {items.map((it, i) => (
+            <li key={it.id} className="absolute" style={{ left: pts[i].x - 22, top: pts[i].y - 22 }}>
+              <a href={`#${it.id}`} aria-current={it.id === active ? "true" : undefined} className="block size-11 rounded-full">
+                <span className="sr-only">{it.label}</span>
+              </a>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </nav>
+  );
+}
+```
+```tsx
+// Server-safe (no hooks). Drop-in for the <meter> in chapter-nav.tsx; `gear` = highest gear reached.
+export function GearMeter({ gear, max = 5 }: { gear: number; max?: number }) {
+  return (
+    <p className="flex items-center gap-1 font-mono text-xs font-bold">
+      <span className="sr-only">
+        Power level: Gear {gear} of {max}
+      </span>
+      <span aria-hidden key={gear} className="gear-pop w-6">
+        G{gear}
+      </span>
+      {Array.from({ length: max }, (_, i) => (
+        <span aria-hidden key={i} data-on={i < gear || undefined} className="gear-pip" />
+      ))}
+    </p>
+  );
+}
+```
+- **MotionPath, checked in the source**: without `align`, the raw path coordinates become the target's x/y. So a ship drawn around (0,0) in the same SVG rides the path exactly, with no measuring and nothing to re-align on resize.
+- **Reduced motion**: the route is fully drawn and the ship jumps island to island. **Mobile and short screens**: hidden by CSS (`.grand-line`). The top `chapter-nav` plus the `GearMeter` cover it.
+- **`chapter-nav.tsx`**: replace the `<meter>` block with `<GearMeter gear={gear} />`. The sr text "Power level: Gear n of 5" replaces the meter label.
+
+### 9b. Wanted-poster drop-in (`wanted-drop.tsx`)
+```tsx
+"use client";
+import { useRef } from "react";
+import { gsap, MQ, useGSAP } from "@/lib/gsap";
+
+// Bounty/profile card: drops from its pin, then swings and settles like paper. Wrap server children.
+export function WantedDrop({ children }: { children: React.ReactNode }) {
+  const el = useRef<HTMLDivElement>(null);
+  useGSAP(() => {
+    const mm = gsap.matchMedia();
+    mm.add(MQ.ok, () => {
+      gsap
+        .timeline({ scrollTrigger: { trigger: el.current, start: "top 80%", once: true } })
+        .from(el.current, { yPercent: -60, rotation: -14, autoAlpha: 0, duration: 0.45, ease: "power2.in" })
+        .to(el.current, { keyframes: { rotation: [9, -5, 2, 0], easeEach: "sine.inOut" }, duration: 1.3 });
+    });
+  });
+  return (
+    <div ref={el} className="origin-top">
+      {children}
+    </div>
+  );
+}
+```
+- The pin is at the top (`origin-top`). It drops with a fast ease-in, then a damped 4-keyframe swing (`easeEach: "sine.inOut"`). It runs once. **Reduced motion**: static card. Use our own poster frame, never the Marine "WANTED" layout (doc 10 §5).
+
+### 9c. Island-arrival chapter titles (`island-title.tsx`): SplitText + ink wipe + wave underline
+```tsx
+"use client";
+import { useRef } from "react";
+import { gsap, MQ, SplitText, useGSAP } from "@/lib/gsap";
+
+// "Island arrival": ink sheet wipes off, title chars rise out of word masks, a wave underline inks in.
+// Wrap the SERVER heading: <IslandTitle><ChapterHeader … /></IslandTitle>. The h2 stays server HTML.
+export function IslandTitle({ children }: { children: React.ReactNode }) {
+  const root = useRef<HTMLDivElement>(null);
+  useGSAP(
+    () => {
+      const h = root.current!.querySelector("h1, h2");
+      const mm = gsap.matchMedia();
+      mm.add(MQ.ok, () => {
+        if (!h) return;
+        const split = SplitText.create(h, { type: "words,chars", mask: "words" }); // aria: "auto" keeps the heading readable
+        gsap
+          .timeline({ scrollTrigger: { trigger: root.current, start: "top 75%", once: true } })
+          .to(".ink-sheet", { scaleX: 0, duration: 0.5, ease: "power3.inOut" })
+          .from(split.chars, { yPercent: 110, duration: 0.5, stagger: 0.025, ease: "back.out(1.6)" }, "-=0.2")
+          .to(".wave", { strokeDashoffset: 0, duration: 0.6, ease: "power2.out" }, "-=0.3");
+        return () => split.revert();
+      });
+      mm.add(MQ.reduce, () => {
+        gsap.set(".ink-sheet", { scaleX: 0 });
+        gsap.set(".wave", { strokeDashoffset: 0 });
+      });
+    },
+    { scope: root },
+  );
+  return (
+    <div ref={root} className="relative">
+      {children}
+      <div aria-hidden className="ink-sheet absolute inset-0 z-10 origin-right bg-ink" />
+      <svg aria-hidden viewBox="0 0 200 8" preserveAspectRatio="none" className="mt-1 h-2 w-48">
+        <path className="wave" d="M0 4 Q12.5 0 25 4 T50 4 T75 4 T100 4 T125 4 T150 4 T175 4 T200 4" pathLength={1} strokeDasharray={1} strokeDashoffset={1} fill="none" stroke="var(--ink)" strokeWidth={2} vectorEffect="non-scaling-stroke" />
+      </svg>
+    </div>
+  );
+}
+```
+- Use `<IslandTitle><ChapterHeader … /></IslandTitle>`, so the `h2` stays server HTML. SplitText `aria: "auto"` (the default) puts an `aria-label` on the heading and hides the char spans. `mask: "words"` clips the rising chars. The split is reverted by the context, and explicitly on branch change.
+
+### 9d. Gear-up transition (`gear-up.tsx`): the chapter-change power-up, including the AI Arc B&W → color climax
+A pinned beat at the top of each chapter (desktop: `pin`, `+=80%`, `scrub: 0.5`; mobile: unpinned, plays once over 1.6 s; reduced: final frame). The old Gear squashes away, the new Gear's effect plays, then "GEAR n!" SFX lettering:
+| Gear (chapter) | FX without art | Extra with art (`<GearArt>`) |
+|---|---|---|
+| 1 (Diploma) | Speed lines zoom in, "GOMU GOMU NO… PISTOL" | G1 body; the actual stretch is §9f `PistolArm` at the end of Ch.1 |
+| 2 (B.Tech) | **Steam burst**: 8 puffs fly out + pink flush | G1 → G2 body swap under the burst, steam fx layer |
+| 3 (Internship) | **Inflate**: a giant balloon circle grows, then pops | G2 → G3, giant-fist fx layer inflates |
+| 4 (Softtronix) | **Haki ink coat**: ink rises from the bottom, text flips to paper (`data-done`) | G3 → G4, haki-arm fx layer |
+| 5 (Crestline AI Arc) | **White flash + elastic wobble + color flood**: cloud puffs, halftone burst, `--flood` 0 → 1 greys the `.flood-media` back into color, `data-mode` bw → color | G4 → G5 swap hidden by the flash, then hair/cloud rubber wobble + "shishishi" laugh (≈3 s, stops) |
+```tsx
+"use client";
+import { useRef } from "react";
+import { laugh } from "@/components/luffy/laugh";
+import { gsap, MQ, SplitText, useGSAP } from "@/lib/gsap";
+import type { Chapter } from "@/types";
+
+type Gear = Chapter["gear"];
+const CALL: Record<Gear, string> = { 1: "GOMU GOMU NO…", 2: "GEAR 2!", 3: "GEAR 3!", 4: "GEAR 4!", 5: "GEAR 5!" };
+const MOVE: Record<Gear, string> = { 1: "PISTOL", 2: "JET PISTOL", 3: "GIGANT PISTOL", 4: "KONG GUN", 5: "SHISHISHI!" };
+const PUFFS = 8;
+
+/**
+ * Pinned power-up beat, first child of each chapter <Section>. Timeline length 1:
+ * 0–.15 old gear squashes away · .1–.5 gear FX · .32 art swap under the FX peak · .35–.55 "GEAR n!" SFX · .55 data-done.
+ * Art is optional: pass <GearArt> as children (features.luffy). Without it this is a pure SFX/FX moment.
+ */
+export function GearUp({ gear, children }: { gear: Gear; children?: React.ReactNode }) {
+  const root = useRef<HTMLDivElement>(null);
+  useGSAP(
+    () => {
+      const el = root.current!;
+      const section = el.closest<HTMLElement>("[data-chapter]");
+      const hasArt = !!el.querySelector("[data-art]");
+      const mm = gsap.matchMedia();
+      mm.add({ desk: MQ.desk, mob: MQ.mob, reduce: MQ.reduce }, (ctx) => {
+        const { desk, reduce } = ctx.conditions as { desk: boolean; reduce: boolean };
+        const mode = section?.dataset.mode;
+        let woke = false;
+        if (gear === 5 && section && !reduce) section.dataset.mode = "bw"; // until the climax
+        const done = (p: number) => {
+          el.toggleAttribute("data-done", p > 0.55); // CSS: gear-4 text flips to paper on the ink coat, etc.
+          if (gear !== 5) return;
+          if (section) section.dataset.mode = p > 0.6 ? "color" : "bw"; // the B&W → color climax
+          if (p > 0.6 && !woke && !reduce && hasArt) {
+            woke = true; // Gear 5 swap settles into a short rubber wobble + laugh (≈3 s, then stops)
+            gsap.to(el.querySelectorAll('[data-art="hair"], [data-art="cloud"]'), { scaleX: 0.96, scaleY: 1.05, yoyo: true, repeat: 7, duration: 0.35, ease: "sine.inOut", transformOrigin: "50% 100%" });
+            laugh(el);
+          }
+        };
+        const split = SplitText.create(el.querySelector(".gear-call"), { type: "chars" });
+        const tl = gsap.timeline({
+          defaults: { ease: "none" },
+          paused: reduce,
+          onUpdate: () => done(tl.progress()),
+          scrollTrigger: reduce
+            ? undefined
+            : desk
+              ? { trigger: el, start: "top top", end: "+=80%", pin: true, scrub: 0.5 }
+              : { trigger: el, start: "top 65%", toggleActions: "play none none none" }, // mobile: no pin, plays once
+        });
+        if (!desk) tl.duration(1.6);
+        tl.to(".gear-prev", { scaleY: 0, autoAlpha: 0, duration: 0.15, ease: "power2.in" }, 0);
+        if (gear === 1) tl.fromTo(".gear-lines", { scale: 1.6, autoAlpha: 0 }, { scale: 1, autoAlpha: 1, duration: 0.3 }, 0.1);
+        if (gear === 2) {
+          tl.fromTo(".gear-tint", { autoAlpha: 0 }, { autoAlpha: 0.5, duration: 0.15 }, 0.1).to(".gear-tint", { autoAlpha: 0, duration: 0.25 }, 0.3);
+        }
+        if (gear === 2 || gear === 5) { // steam burst (G2) / Nika clouds (G5): puffs fly out from the centre
+          const r = () => 0.42 * Math.min(innerWidth, innerHeight);
+          tl.fromTo(".puff", { scale: 0, x: 0, y: 0, autoAlpha: 1 }, {
+            scale: 1.6,
+            x: (i: number) => Math.cos((i / PUFFS) * Math.PI * 2) * r(),
+            y: (i: number) => Math.sin((i / PUFFS) * Math.PI * 2) * r(),
+            duration: 0.35,
+            ease: "power2.out",
+          }, 0.12).to(".puff", { autoAlpha: 0, duration: 0.15 }, 0.42);
+        }
+        if (gear === 3) tl.fromTo(".balloon", { scale: 0.1 }, { scale: 1, duration: 0.3, ease: "back.out(1.4)" }, 0.1).to(".balloon", { scale: 1.25, autoAlpha: 0, duration: 0.08 }, 0.42); // inflate, pop
+        if (gear === 4) tl.fromTo(".ink-coat", { scaleY: 0 }, { scaleY: 1, duration: 0.3, ease: "power2.in" }, 0.1); // haki coat rises
+        if (gear === 5) {
+          tl.fromTo(".gear-flash", { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.1 }, 0.3)
+            .to(".gear-flash", { autoAlpha: 0, duration: 0.2 }, 0.45)
+            .fromTo(".gear-stage", { scaleX: 1.25, scaleY: 0.8 }, { scaleX: 1, scaleY: 1, duration: 0.4, ease: "elastic.out(1.2, 0.3)" }, 0.45) // cartoon wobble
+            .fromTo(".halftone", { autoAlpha: 0 }, { autoAlpha: 0.6, duration: 0.15 }, 0.45)
+            .to(".halftone", { autoAlpha: 0, duration: 0.25 }, 0.65);
+          if (section) tl.fromTo(section, { "--flood": 0 }, { "--flood": 1, duration: 0.4 }, 0.5); // grayscale → color on .flood-media
+        }
+        if (hasArt) {
+          tl.to('[data-art="prev"]', { autoAlpha: 0, duration: 0.05 }, 0.32)
+            .fromTo('[data-art="body"]', { autoAlpha: 0, scale: 0.9 }, { autoAlpha: 1, scale: 1, duration: 0.15, ease: "back.out(2)" }, 0.32);
+          if (gear !== 1 && gear !== 5) tl.fromTo('[data-art="fx"]', { autoAlpha: 0, scale: 0.6 }, { autoAlpha: 1, scale: 1, duration: 0.2, ease: "back.out(1.5)" }, 0.38);
+        }
+        tl.from(split.chars, { yPercent: 120, scale: 0, autoAlpha: 0, stagger: 0.02, duration: 0.15, ease: "back.out(2)" }, 0.35)
+          .from(".gear-move", { autoAlpha: 0, y: 20, duration: 0.1 }, 0.5)
+          .set({}, {}, 1);
+        if (reduce) tl.progress(1); // static final frame, chapter already in color
+        return () => {
+          split.revert();
+          if (section && mode) section.dataset.mode = mode;
+        };
+      });
+    },
+    { scope: root },
+  );
+
+  return (
+    <div ref={root} data-gear={gear} aria-hidden className="gear-up relative isolate grid h-svh place-items-center overflow-hidden">
+      {gear === 1 && <div className="gear-lines absolute -inset-1/4" />}
+      {gear === 2 && <div className="gear-tint absolute inset-0" />}
+      {(gear === 2 || gear === 5) &&
+        Array.from({ length: PUFFS }, (_, i) => <span key={i} className="puff absolute left-1/2 top-1/2 -ml-[9vmin] -mt-[9vmin] size-[18vmin] rounded-full" />)}
+      {gear === 3 && <div className="balloon absolute size-[90vmin] rounded-full border-[6px] border-ink bg-paper" />}
+      {gear === 4 && <div className="ink-coat absolute inset-0 origin-bottom bg-ink" />}
+      {gear === 5 && (
+        <>
+          <div className="halftone absolute inset-0" />
+          <div className="gear-flash absolute inset-0 z-20 bg-paper" />
+        </>
+      )}
+      <div className="gear-stage relative z-10 grid size-full place-items-center text-center">
+        {children}
+        <p className="gear-prev sfx absolute">{gear > 1 ? `GEAR ${gear - 1}` : "BASE"}</p>
+        <div>
+          <p className="gear-call sfx text-[clamp(3rem,14vw,10rem)] leading-none">{CALL[gear]}</p>
+          <p className="gear-move mt-2 font-mono font-bold tracking-widest">{MOVE[gear]}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+```
+- **Gear 5 is the one-time climax.** There's one white-out (no repeated flashing, so WCAG 2.3.1 is OK), and the scrub is reversible. `data-mode` toggles at progress 0.6 in both directions, and the original mode is restored on unmount. Reduced motion lands directly in full color.
+- **Placement**: first child inside the chapter's `<Section>`. Make it full-bleed with `className="ml-[calc(50%-50vw)] w-screen"` on a wrapper (no translate tricks on pinned elements) and set `html { overflow-x: clip }`. The AI Arc media/product grid must sit in `<div className="flood-media">`.
+- **Cost**: 5 pins × 80% adds about 4 viewports of scroll. If that feels long, use `end: "+=50%"` or pin only Gear 5.
+
+### 9e. Pinned horizontal Gaiden strip (`gaiden-strip.tsx`)
+```tsx
+"use client";
+import { useRef } from "react";
+import { gsap, MQ, useGSAP } from "@/lib/gsap";
+
+// Desktop + motion OK: pinned horizontal strip scrubbed by vertical scroll.
+// Otherwise: native horizontal scroll with snap (CSS default below), mobile stacks vertically.
+// Children: one <div className="gaiden-card w-[min(80vw,640px)] shrink-0 snap-start"> per project.
+export function GaidenStrip({ children }: { children: React.ReactNode }) {
+  const root = useRef<HTMLDivElement>(null);
+  useGSAP(
+    () => {
+      const mm = gsap.matchMedia();
+      mm.add(MQ.desk, () => {
+        const wrap = root.current!;
+        const track = wrap.querySelector<HTMLElement>(".gaiden-track")!;
+        const dist = () => Math.max(0, track.scrollWidth - wrap.clientWidth);
+        gsap.set(wrap, { overflow: "clip" }); // clip, not hidden: focus can't scroll it behind GSAP's back
+        const tween = gsap.to(track, {
+          x: () => -dist(),
+          ease: "none",
+          scrollTrigger: { trigger: wrap, start: "top top", end: () => `+=${dist()}`, pin: true, scrub: 0.5, invalidateOnRefresh: true },
+        });
+        // Keyboard: Tab to an off-screen card scrolls the page to where that card is in view.
+        const onFocus = (e: FocusEvent) => {
+          const card = (e.target as HTMLElement).closest<HTMLElement>(".gaiden-card"), st = tween.scrollTrigger;
+          if (!card || !st) return;
+          const p = gsap.utils.clamp(0, 1, card.offsetLeft / Math.max(1, dist()));
+          window.scrollTo({ top: st.start + p * (st.end - st.start) });
+        };
+        track.addEventListener("focusin", onFocus);
+        return () => track.removeEventListener("focusin", onFocus);
+      });
+    },
+    { scope: root },
+  );
+  return (
+    <div ref={root} className="overflow-x-auto md:snap-x md:snap-mandatory">
+      <div className="gaiden-track flex flex-col gap-6 md:w-max md:flex-row">{children}</div>
+    </div>
+  );
+}
+```
+- Children: `projects.map(p => <div className="gaiden-card w-[min(80vw,640px)] shrink-0 snap-start" id={`project-${p.id}`}><ProjectCard … /></div>)`.
+- **Keyboard**: Tab into an off-screen card scrolls the page to the matching scrub position. `overflow: clip` stops the browser from scrolling the strip behind GSAP.
+- **Anchors**: `#project-x` links land on the strip's start, which is acceptable. **Reduced motion and mobile**: native scroll (snap row on desktop, stacked on mobile).
+
+### 9f. Luffy layers (only when `siteConfig.features.luffy`; files per doc 10)
+**Pistol stretch (`luffy/pistol-arm.tsx`)**. The stretch layer scales from its left joint, and the forearm and fist ride its right end. All parts share the 3000×4000 canvas, so they stack pixel-perfectly with `fill`. The tube's top and bottom ink lines keep their thickness under `scaleX`.
+```tsx
+"use client";
+import Image from "next/image";
+import { useRef } from "react";
+import { gsap, MQ, useGSAP } from "@/lib/gsap";
+
+const W = 3000; // doc 10 canvas width (all parts share it, so they stack pixel-perfectly)
+const PARTS = ["body", "shoulder", "upper-arm", "stretch", "forearm", "fist", "fx"] as const;
+const src = (part: string, mode: string) => `/art/luffy/luffy-g1-${part}-${mode}.webp`;
+
+/**
+ * Gear 1 "Gomu Gomu no Pistol", scrubbed: the stretch layer scales from its left joint while forearm + fist ride
+ * its right end, so the ink outline never distorts vertically. Server parent renders it only when features.luffy.
+ * stretchStart/stretchEnd = the stretch segment's x on the 3000px canvas (from the artist's `pivots` layer).
+ */
+export function PistolArm({ stretchStart, stretchEnd, mode = "bw", reach = 0.55 }: { stretchStart: number; stretchEnd: number; mode?: "bw" | "color"; reach?: number }) {
+  const root = useRef<HTMLDivElement>(null);
+  useGSAP(
+    () => {
+      const mm = gsap.matchMedia();
+      mm.add(MQ.ok, () => {
+        const seg = () => (root.current!.offsetWidth * (stretchEnd - stretchStart)) / W; // segment width in px
+        const px = () => innerWidth * reach; // how far the fist travels
+        const ride = '[data-part="forearm"], [data-part="fist"]';
+        gsap
+          .timeline({ defaults: { ease: "none" }, scrollTrigger: { trigger: root.current, start: "center center", end: "+=120%", pin: true, scrub: 0.4, invalidateOnRefresh: true } })
+          .fromTo('[data-part="stretch"]', { scaleX: 1 }, { scaleX: () => 1 + px() / seg(), duration: 0.6 }, 0)
+          .fromTo(ride, { x: 0 }, { x: () => px(), duration: 0.6 }, 0)
+          .fromTo('[data-part="fx"]', { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.1 }, 0.5) // motion lines at full reach
+          .to('[data-part="stretch"]', { scaleX: 1, duration: 0.12, ease: "power4.in" }, 0.85) // snaps back
+          .to(ride, { x: 0, duration: 0.12, ease: "power4.in" }, 0.85)
+          .to('[data-part="fx"]', { autoAlpha: 0, duration: 0.05 }, 0.85);
+      });
+    },
+    { scope: root },
+  );
+  return (
+    <div ref={root} className="relative aspect-[3/4] h-[70svh] max-w-full">
+      {PARTS.map((p) => (
+        <Image
+          key={p}
+          data-part={p}
+          src={src(p, mode)}
+          alt={p === "body" ? "Straw-hat pirate (fan art) throwing a stretching rubber punch" : ""}
+          fill
+          sizes="(min-width: 768px) 53svh, 100vw"
+          className="object-contain"
+          style={p === "stretch" ? { transformOrigin: `${(stretchStart / W) * 100}% 50%` } : p === "fx" ? { opacity: 0, visibility: "hidden" } : undefined}
+        />
+      ))}
+    </div>
+  );
+}
+```
+**Laugh frame swap (`luffy/laugh.ts`)**, used by §9d Gear 5 and reusable anywhere the mouth layers exist:
+```ts
+import { gsap } from "@/lib/gsap";
+
+// "Shishishi": flips two open-mouth overlays over the closed grin (doc 10 G5 layers mouth-a / mouth-b).
+// 3 laughs ≈ 0.9 s, well under the 5 s WCAG 2.2.2 limit. Returns undefined when the art isn't there.
+export function laugh(scope: Element, times = 3) {
+  const a = scope.querySelector('[data-art="mouth-a"]'), b = scope.querySelector('[data-art="mouth-b"]');
+  if (!a || !b) return;
+  return gsap
+    .timeline({ repeat: times - 1 })
+    .set(a, { autoAlpha: 1 })
+    .set(a, { autoAlpha: 0 }, 0.12)
+    .set(b, { autoAlpha: 1 }, 0.12)
+    .set(b, { autoAlpha: 0 }, 0.24)
+    .set({}, {}, 0.3);
+}
+```
+**Gear art layers for `<GearUp>` (`luffy/gear-art.tsx`, server)**:
+```tsx
+import Image from "next/image";
+import type { Chapter } from "@/types";
+
+type Gear = Chapter["gear"];
+// Layers per Gear signature illustration (doc 10 §2). "prev" = the previous Gear's body, faded out under the FX peak.
+const LAYERS: Record<Gear, string[]> = {
+  1: ["body"],
+  2: ["body", "fx"], // fx = steam
+  3: ["body", "fx"], // fx = giant bone-balloon fist
+  4: ["body", "fx"], // fx = haki arms + steam scarf
+  5: ["body", "hair", "cloud", "mouth-a", "mouth-b"],
+};
+const HIDDEN = new Set(["fx", "mouth-a", "mouth-b"]);
+const src = (g: number, part: string, mode: "bw" | "color") => `/art/luffy/luffy-g${g}-${part}-${mode}.webp`;
+
+/** Server component. Render ONLY inside `siteConfig.features.luffy && …`, as children of <GearUp>. */
+export function GearArt({ gear, mode }: { gear: Gear; mode: "bw" | "color" }) {
+  return (
+    <div className="absolute inset-0 -z-10 mx-auto aspect-[3/4] h-full max-w-full">
+      {gear > 1 && <Image data-art="prev" src={src(gear - 1, "body", mode)} alt="" fill sizes="(min-width: 768px) 60svh, 100vw" className="object-contain" />}
+      {LAYERS[gear].map((p) => (
+        <Image
+          key={p}
+          data-art={p}
+          src={src(gear, p, mode)}
+          alt={p === "body" ? `Straw-hat pirate (fan art) powering up: Gear ${gear}` : ""}
+          fill
+          sizes="(min-width: 768px) 60svh, 100vw"
+          className="object-contain"
+          style={HIDDEN.has(p) ? { opacity: 0, visibility: "hidden" } : undefined}
+        />
+      ))}
+    </div>
+  );
+}
+```
+**Wiring (server `page.tsx`, inside `chapters.map`)**:
+```tsx
+<Section key={c.id} part={c}>
+  <div className="ml-[calc(50%-50vw)] w-screen">
+    <GearUp gear={c.gear}>{siteConfig.features.luffy && <GearArt gear={c.gear} mode={c.gear === 5 ? "color" : "bw"} />}</GearUp>
+  </div>
+  <IslandTitle><ChapterHeader id={`${c.id}-title`} eyebrow={`Ch.${c.number} · ${c.gearName}`} title={c.title} label={`${c.subtitle} · ${c.period}`} /></IslandTitle>
+  {/* …copy… ; Ch.5 products inside <div className="flood-media">…</div> */}
+  {c.gear === 1 && siteConfig.features.luffy && <PistolArm stretchStart={/* from pivots */ 1450} stretchEnd={1750} />}
+</Section>
+```
+`stretchStart`/`stretchEnd` are placeholders until the artist's `pivots` layer arrives. Flag off means none of the `/art/luffy/*` URLs are rendered or requested.
+
+### 9g. CSS for §7–§9 (add to `globals.css`; colours via tokens)
+```css
+.ink-poof { animation: ink-poof 0.28s ease-out forwards; }
+@keyframes ink-poof { from { scale: 0.5; opacity: 1; } to { scale: 1.4; opacity: 0; } }
+.pose-in { animation: pose-in 50ms linear; }
+@keyframes pose-in { from { opacity: 0; } }
+.hop { animation: hop 0.4s ease-out; }
+@keyframes hop { 50% { translate: 0 -16px; } }
+
+.grand-line { display: none; }
+@media (min-width: 768px) and (min-height: 680px) { .grand-line { display: block; } }
+.grand-line a:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+
+.gear-pip { width: 0.5rem; height: 0.75rem; border: 2px solid currentColor; transform: skewX(-12deg); transition: background-color 0.2s; }
+.gear-pip[data-on] { background: currentColor; }
+.gear-pop { display: inline-block; animation: gear-pop 0.35s cubic-bezier(0.3, 1.6, 0.5, 1); }
+@keyframes gear-pop { from { scale: 1.8; } }
+
+.gear-up :is(.gear-tint, .halftone, .gear-flash, .puff) { opacity: 0; visibility: hidden; } /* GSAP autoAlpha owns them */
+.gear-lines { background: repeating-conic-gradient(from 0deg at 50% 50%, var(--ink) 0 0.6deg, transparent 0.6deg 5deg); mask-image: radial-gradient(circle, transparent 26%, #000 72%); }
+.gear-tint { background: var(--gear2-pink); mix-blend-mode: multiply; }
+.puff { background: var(--paper); border: 3px solid var(--ink); }
+.halftone { background: radial-gradient(var(--ink) 30%, transparent 32%) 0 0 / 8px 8px; mix-blend-mode: multiply; }
+.gear-up[data-gear="4"][data-done] .gear-stage { color: var(--paper); }
+.flood-media { filter: grayscale(calc(1 - var(--flood, 1))); } /* unset = full color (no JS, reduced motion) */
+
+@media (prefers-reduced-motion: reduce) {
+  .ink-poof { display: none; }
+  .pose-in { animation-duration: 0.3s; }
+  .hop, .gear-pop { animation: none; }
+  .gear-pip { transition: none; }
+}
+```
+New token: `--gear2-pink` (Design picks it; suggested: a light pink that passes as a tint under ink).
+
+## 10. Open items
+- **Senior Dev**: replace `src/lib/gsap.ts` (§0), add `Perch` to `src/types` (§8.2), swap the `<meter>` for `GearMeter`, add the §9g CSS and the `--ink`/`--paper`/`--gear2-pink` tokens (globals still has only `--background`/`--foreground`), and set `html { overflow-x: clip }`.
+- **QA in a browser**: pin spacing with 5 Gear pins + the Gaiden pin (call `ScrollTrigger.refresh()` once after fonts/images if triggers drift), mobile Safari address-bar resize, and reduced motion end-to-end.
+- **Art**: tune `PistolArm` pivots and the BreakOut 40/60 split against the real files.
+
