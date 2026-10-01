@@ -111,7 +111,7 @@ export function ContactForm({ email, label = "Send" }: { email: string; label?: 
       </div>
       <button
         type="submit"
-        data-guide-target
+       
         disabled={status === "sending"}
         className="btn btn-straw self-start disabled:opacity-60"
       >

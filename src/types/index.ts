@@ -7,8 +7,6 @@ export type SiteConfig = {
   url: string;
   resume: string;
   socials: { label: string; href: string }[];
-  /** Feature flags; Luffy (fan-art guide) components render only when true. */
-  features: { luffy: boolean };
 };
 
 export type Stat = { value: string; label: string };
@@ -16,29 +14,11 @@ export type Stat = { value: string; label: string };
 /** Print mode per section (design spec §1), rendered as `data-mode` on `<section>`. */
 export type ColorMode = "bw" | "duo" | "color" | "night";
 
-/** Guide character pose ids (design spec §9); files live in public/guide/<id>.webp (dormant until Sprint 5). */
-export type PoseId =
-  | "01-wave-hello"
-  | "02-break-out"
-  | "03-walk"
-  | "04-point"
-  | "05-think"
-  | "06-wave-bye"
-  | "07-bust";
-
-export type Guide = {
-  pose: PoseId;
-  line: string;
-  /** Pose shown while entering, before `pose` (e.g. walk → point). */
-  enterPose?: PoseId;
-};
-
 /** A non-chapter part of the volume (cover, Gaiden, Status Window, Finale). */
 export type Part = {
   id: string;
   title: string;
   colorMode: ColorMode;
-  guide: Guide;
   /** Short narrator intro line (Gaiden, Status Window). */
   intro?: string;
 };
@@ -62,7 +42,7 @@ export type Product = { title: string; description: string };
 
 export type Chapter = Part & {
   number: number;
-  /** Career power-up level (Luffy's Gears concept). */
+  /** Career power-up level (the Gears concept). */
   gear: 1 | 2 | 3 | 4 | 5;
   gearName: string;
   /** One Piece-style arc name, e.g. "Gear 2: The Academy Arc". */

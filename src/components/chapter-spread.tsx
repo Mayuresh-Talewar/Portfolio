@@ -68,7 +68,7 @@ export function ChapterSpread({ chapter: c, projects }: { chapter: Chapter; proj
       {climax && (
         <GearFive>
           <div className="flex flex-col items-center">
-            <p className="gear-prev sfx absolute text-[clamp(4rem,14vw,10rem)]">GEAR {c.gear - 1}</p>
+            <p aria-hidden className="gear-prev sfx absolute text-[clamp(4rem,14vw,10rem)]">GEAR {c.gear - 1}</p>
             <p aria-hidden className="ribbon text-sm md:text-base" style={{ "--ribbon-bg": "var(--color-ink)" } as React.CSSProperties}>
               Ch.{c.number}: the climax
             </p>

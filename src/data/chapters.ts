@@ -8,7 +8,7 @@ export const stats: Stat[] = [
   { value: "10k+", label: "docs with sub-second retrieval" },
 ];
 
-// Chronological, per R&D §7.1. colorMode + guide lines per design spec §1 / §6.
+// Chronological, per R&D §7.1. colorMode per design spec §1.
 export const chapters: Chapter[] = [
   {
     id: "the-beginning",
@@ -26,7 +26,6 @@ export const chapters: Chapter[] = [
     subtitle: "Diploma, Anjuman Polytechnic",
     period: "2018 – 2021",
     colorMode: "bw",
-    guide: { pose: "04-point", line: "Nagpur, 2018. A diploma and my first Hello World." },
     role: "Diploma in Computer Engineering",
     org: "Anjuman Polytechnic",
     location: "Nagpur, Maharashtra",
@@ -48,7 +47,6 @@ export const chapters: Chapter[] = [
     subtitle: "B.Tech CSE, G H Raisoni University",
     period: "2021 – 2024",
     colorMode: "bw",
-    guide: { pose: "05-think", line: "Four years of B.Tech. Lots of late-night builds." },
     role: "B.Tech in Computer Science Engineering",
     org: "G H Raisoni University",
     location: "Borgaon, Madhya Pradesh",
@@ -70,7 +68,6 @@ export const chapters: Chapter[] = [
     subtitle: "Full Stack Developer Intern, Technology World Creater",
     period: "Mar 2024 – Aug 2024",
     colorMode: "duo",
-    guide: { pose: "04-point", line: "First real job. Production code hits different." },
     role: "Full Stack Developer Intern",
     org: "Technology World Creater Pvt. Ltd.",
     location: "Pune, Maharashtra",
@@ -102,7 +99,6 @@ export const chapters: Chapter[] = [
     subtitle: "Frontend Developer, Softtronix",
     period: "Sep 2024 – Jul 2025",
     colorMode: "duo",
-    guide: { pose: "04-point", line: "Softtronix is where my frontend got sharp." },
     role: "Frontend Developer",
     org: "Softtronix Software Solution Pvt. Ltd.",
     location: "Nagpur, Maharashtra",
@@ -133,7 +129,6 @@ export const chapters: Chapter[] = [
     subtitle: "Full Stack Developer, Crestline Intelligence",
     period: "Aug 2025 – Present",
     colorMode: "color",
-    guide: { pose: "04-point", enterPose: "03-walk", line: "And then the world got color. This is what I build now." },
     role: "Full Stack Developer",
     org: "Crestline Intelligence Pvt. Ltd.",
     location: "Pune, Maharashtra",
@@ -179,33 +174,28 @@ export const parts = {
     id: "cover",
     title: "Vol. 1: Mayuresh Talewar",
     colorMode: "color",
-    guide: { pose: "01-wave-hello", line: "Hello! I'm Mayuresh. This volume is my story so far." },
   },
   breakOut: {
     id: "break-out",
     title: "Break-out",
     colorMode: "color",
-    guide: { pose: "02-break-out", line: "Mind if I step out of the panel?" },
   },
   gaiden: {
     id: "gaiden",
     title: "Side Stories",
     colorMode: "color",
-    guide: { pose: "04-point", line: "Side stories. All live. Go poke them." },
     intro: "Side quests from the voyage. Every one is live, so take a look.",
   },
   status: {
     id: "status-window",
     title: "Status Window",
     colorMode: "night",
-    guide: { pose: "05-think", line: "My stats. No fake percentages, just what I use." },
     intro: "The status screen. Real skills from real projects, no power-level guesses.",
   },
   finale: {
     id: "finale",
     title: "To Be Continued...",
     colorMode: "color",
-    guide: { pose: "06-wave-bye", line: "To be continued… the next chapter is written with you." },
     toBeContinued: "To be continued… The next arc needs an island.",
     cta: {
       heading: "Is your team the next island on my route?",

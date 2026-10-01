@@ -69,6 +69,7 @@ export default function Home() {
                   マユレシュ・タレワル
                 </span>
               </p>
+              <hgroup>
               <h1 id="cover-title" className="logotype mt-3 text-[12.2vw] md:text-[6.6vw] min-[1440px]:text-[6rem]">
                 <span data-intro="name" className="block">
                   Mayuresh
@@ -84,9 +85,11 @@ export default function Home() {
               >
                 {siteConfig.title}
               </p>
+              </hgroup>
               <p data-intro="copy" className="mt-5 max-w-[34ch] font-letter text-lg leading-snug font-bold md:text-xl">{cover.tagline}</p>
-              <p data-intro="copy" className="mt-2 text-sm font-semibold md:text-base">
-                Now: {current.role} at {current.org.replace(/ Pvt\. Ltd\.$/, "")}, {siteConfig.location.split(",")[0]}
+              {/* Plain keyword summary (SEO audit P0 #3). */}
+              <p data-intro="copy" className="mt-3 max-w-[48ch] text-sm leading-relaxed font-semibold md:text-base">
+                {siteConfig.description} Now at {current.org.replace(/ Pvt\. Ltd\.$/, "")}.
               </p>
               <div data-intro="copy" className="mt-7 flex flex-wrap gap-4">
                 <a href={siteConfig.resume} download className="btn btn-straw">

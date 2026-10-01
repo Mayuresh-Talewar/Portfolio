@@ -35,7 +35,7 @@ export function Intro() {
           tl.from(".intro-stamp", { scale: 2.6, rotation: -18, autoAlpha: 0, duration: 0.3, ease: "back.out(2.2)" }, 0.05)
             .to(".intro-a", { xPercent: -105, rotation: -6, duration: 0.45, ease: "power3.inOut", transformOrigin: "0% 0%" }, 0.25)
             .to(".intro-b", { xPercent: 105, rotation: 6, duration: 0.45, ease: "power3.inOut", transformOrigin: "100% 100%" }, 0.25)
-            .to(".intro-stamp", { scale: 0.6, autoAlpha: 0, duration: 0.25, ease: "power2.in" }, 0.25)
+            .to(".intro-stamp", { scale: 0.6, autoAlpha: 0, duration: 0.2, ease: "power2.in" }, 0.36)
             .from(hero("name"), { yPercent: -30, scale: 1.3, rotation: -4, autoAlpha: 0, stagger: 0.08, duration: 0.45, ease: "back.out(1.8)" }, 0.55)
             .from(hero("ribbon"), { scaleX: 0, transformOrigin: "0% 50%", duration: 0.35, ease: "power3.out" }, 0.75)
             .from(hero("copy"), { y: 14, autoAlpha: 0, stagger: 0.06, duration: 0.3, ease: "power2.out" }, 0.82)

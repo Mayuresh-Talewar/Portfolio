@@ -14,5 +14,4 @@ export const siteConfig: SiteConfig = {
     { label: "GitHub", href: "https://github.com/Mayuresh-Talewar" },
     { label: "LinkedIn", href: "https://www.linkedin.com/in/mayuresh-talewar-06242223a" },
   ],
-  features: { luffy: false },
 };

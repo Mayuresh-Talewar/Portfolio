@@ -41,40 +41,51 @@ export function ChapterNav({
   }, [items]);
 
   useGSAP(
-    () => {
-      const last = items.length - 1;
-      const sail = gsap.to(ship.current, {
-        motionPath: { path: route.current!, align: route.current!, alignOrigin: [0.5, 0.8] },
-        ease: "none",
-        paused: true,
-      });
-      const pos = { p: 0 };
-      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      const to = gsap.quickTo(pos, "p", {
-        duration: reduce ? 0 : 0.7,
-        ease: "power3.out",
-        onUpdate: () => {
-          sail.progress(pos.p);
-        },
-      });
-      items.forEach(({ id }, i) => {
-        const el = document.getElementById(id);
-        if (!el) return;
-        ScrollTrigger.create({
-          trigger: el,
-          start: "top 55%",
-          end: "bottom 55%",
-          onUpdate: (s) => to(Math.min(1, (i + (i < last ? s.progress : 0)) / last)),
-          onToggle: (s) => s.isActive && to(Math.min(1, (i + (i < last ? s.progress : 0)) / last)),
+    (context) => {
+      // MotionPathPlugin only drives this ship, so it loads after first paint instead of in the main bundle.
+      let alive = true;
+      import("gsap/MotionPathPlugin").then(({ MotionPathPlugin }) => {
+        if (!alive) return;
+        gsap.registerPlugin(MotionPathPlugin);
+        context.add(() => {
+          const last = items.length - 1;
+          const sail = gsap.to(ship.current, {
+            motionPath: { path: route.current!, align: route.current!, alignOrigin: [0.5, 0.8] },
+            ease: "none",
+            paused: true,
+          });
+          const pos = { p: 0 };
+          const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+          const to = gsap.quickTo(pos, "p", {
+            duration: reduce ? 0 : 0.7,
+            ease: "power3.out",
+            onUpdate: () => {
+              sail.progress(pos.p);
+            },
+          });
+          items.forEach(({ id }, i) => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            ScrollTrigger.create({
+              trigger: el,
+              start: "top 55%",
+              end: "bottom 55%",
+              onUpdate: (s) => to(Math.min(1, (i + (i < last ? s.progress : 0)) / last)),
+              onToggle: (s) => s.isActive && to(Math.min(1, (i + (i < last ? s.progress : 0)) / last)),
+            });
+          });
+          // The route SVG stretches with the nav, so re-measure the path on resize.
+          const onResize = () => {
+            sail.invalidate();
+            sail.progress(pos.p);
+          };
+          window.addEventListener("resize", onResize);
+          return () => window.removeEventListener("resize", onResize);
         });
       });
-      // The route SVG stretches with the nav, so re-measure the path on resize.
-      const onResize = () => {
-        sail.invalidate();
-        sail.progress(pos.p);
+      return () => {
+        alive = false;
       };
-      window.addEventListener("resize", onResize);
-      return () => window.removeEventListener("resize", onResize);
     },
     { scope: root, dependencies: [items] },
   );

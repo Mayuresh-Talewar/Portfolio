@@ -5,7 +5,8 @@ import "./globals.css";
 
 // Display logotype + titles; SFX lettering; manga caption lettering; body/UI.
 const dela = Dela_Gothic_One({ variable: "--font-dela", weight: "400", subsets: ["latin"] });
-const bangers = Bangers({ variable: "--font-bangers", weight: "400", subsets: ["latin"] });
+// Bangers only letters below-the-fold SFX: no preload.
+const bangers = Bangers({ variable: "--font-bangers", weight: "400", subsets: ["latin"], preload: false });
 const comic = Comic_Neue({ variable: "--font-comic", weight: ["400", "700"], subsets: ["latin"] });
 const archivo = Archivo({ variable: "--font-archivo", subsets: ["latin"], axes: ["wdth"] });
 // Wanted-poster serif (OFL).
