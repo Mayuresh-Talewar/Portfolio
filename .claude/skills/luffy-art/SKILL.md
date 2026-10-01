@@ -76,3 +76,21 @@ clean ink, flat base colours, then a 2-tone cel shadow from one light source, a 
 - (G1 iter 7) Uniform zigzag hair looked like a crown of spikes. Fix: curved Q-spikes with varied lengths.
 - (G1 iter 8) The hat sat too high and showed a tall band of hair. Fix: lower the hat 7 and tilt it 3 degrees.
 - Remaining G1 gaps: brush-like line variation, hair strand rhythm, cardigan drape and fold design, knuckle detail.
+
+### Gears (same rig, `GEARS` dict)
+- (G3) Swinging a full arm sideways leaves the 600x800 canvas, because the arm is about 285 long. Fix: shrink the whole pose with
+  `art_t` (scale 0.62 about the soles) and raise the arm overhead (rotate 165), so the scaled fist fits above the head.
+- (G3) The fist floated away from the forearm because the wrist pivot was 8 above the fist top, and scale(8.5) multiplies the gap.
+  Fix: the pivot must sit exactly at the part's joint edge (wrist_r = 187,512).
+- (G3) A scaled hanging fist reads as a paddle or mitten. Fix: a dedicated front-view fist with 4 finger bumps and segment
+  lines, thin tapers (0.55) because scaling multiplies the line weight; `vector-effect:non-scaling-stroke` for strokes.
+- (G2) A ring or columns of separate clouds looks like stickers. Fix: a dense seeded random mass of 30+ overlapping puffs
+  behind the body, a few in front, each with a curl stroke, in pink-white steam.
+- (G4) Hatless gears showed a bald cranium, because hair only existed under the brim. Fix: a gear `hair` function that
+  covers the crown. Round-lobed hair reads as an afro; use spiky tongues (G4) or flame tongues (G5).
+- (G4) A wide smoke ribbon over the shoulders reads as a fur coat. Fix: thin (4-7) translucent ribbon outside the arms.
+- (G5) Bead-chain clouds look like a boa. Fix: `ribbon()` with bump 0.9 and widths of 14-22 gives a puffy cloud scarf.
+- Rig limit: siblings, not nested. Rotating `-upper` does not carry `-forearm`/`-fist`, so bend a limb by rotating `arm-x`
+  and then the forearm about the elbow, or animate forearm and fist together. Nesting would put the forearm over the sleeve.
+- Remaining Gear gaps: G2 needs the crouched pump pose (legs are not rigged); G3 needs a balloon-thick arm; G4 needs real
+  muscle mass and haki shine; G5 needs a dynamic pose and a more flowing hair silhouette.
