@@ -14,8 +14,11 @@ export function SiteFooter({ site }: { site: SiteConfig }) {
             © {new Date().getFullYear()} {site.name}. Vol. 1, printed in Pune.
           </p>
           {site.features.luffy && (
-            // TODO: final fan-art credit wording from Design.
-            <p>One Piece fan art. One Piece © Eiichiro Oda / Shueisha. Not affiliated or endorsed.</p>
+            // Credit + disclaimer (docs/10 §5).
+            <p className="max-w-[62ch] text-paper/80">
+              Monkey D. Luffy and ONE PIECE © Eiichiro Oda / Shueisha, Toei Animation. The character art is original fan
+              art made as a personal tribute. This site is not affiliated with or endorsed by the rights holders.
+            </p>
           )}
         </div>
       </div>
