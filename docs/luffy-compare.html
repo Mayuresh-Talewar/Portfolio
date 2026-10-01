@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Luffy compare</title>
+<style>
+  /* Internal art QA page: reference (docs/references/luffy, gitignored) vs our SVG (docs/compare, gitignored). */
+  body { margin: 0; font: 14px system-ui, sans-serif; background: #e9eef3; color: #1b1b1b; }
+  header { position: sticky; top: 0; z-index: 2; display: flex; gap: 8px; align-items: center; padding: 8px 12px; background: #fff; border-bottom: 1px solid #ccd; }
+  button { font: inherit; padding: 6px 10px; border: 1px solid #889; background: #f6f7f9; border-radius: 6px; cursor: pointer; }
+  button[aria-pressed="true"] { background: #1b1b1b; color: #fff; }
+  .row { display: flex; gap: 8px; padding: 12px; align-items: flex-start; }
+  .row h2 { writing-mode: vertical-rl; margin: 0; font-size: 16px; }
+  .cell { position: relative; height: var(--h, 560px); background: #fff; }
+  .cell img { height: 100%; display: block; }
+  .cell.ref img { object-fit: contain; max-width: 520px; }
+  .overlay { display: none; width: 420px; }
+  .overlay img { position: absolute; inset: 0; height: 100%; width: 100%; object-fit: contain; }
+  .overlay img + img { opacity: .5; }
+  body.ov .overlay { display: block; }
+  body.ov .side { display: none; }
+</style>
+</head>
+<body>
+<header>
+  <strong>Luffy compare</strong>
+  <button id="ov" aria-pressed="false">Overlay 50%</button>
+  <button data-g="all" aria-pressed="true">All</button>
+  <button data-g="1">G1</button><button data-g="2">G2</button><button data-g="3">G3</button><button data-g="4">G4</button><button data-g="5">G5</button>
+</header>
+<main id="rows"></main>
+<script>
+  const refs = { 1: "ref1", 2: "ref5", 3: "ref6", 4: "ref7", 5: "ref8" };
+  const v = Date.now();
+  const rows = document.getElementById("rows");
+  // ?g=3 renders ONE gear large (the SVGs are heavy; rendering all 10 at once can stall the tab), ?g=3&ov=1 overlays
+  const q = new URLSearchParams(location.search), only = q.get("g");
+  if (only) document.body.style.setProperty("--h", "860px");
+  for (const g of only ? [+only] : [1, 2, 3, 4, 5]) {
+    const ref = `references/luffy/${refs[g]}.png`, col = `compare/luffy-g${g}-color.svg?${v}`, bw = `compare/luffy-g${g}-bw.svg?${v}`;
+    rows.insertAdjacentHTML("beforeend", `<section class="row" data-g="${g}"><h2>G${g}</h2>
+      <div class="cell ref"><img src="${ref}" alt="reference G${g}"></div>
+      <div class="cell side"><img src="${col}" alt="ours colour G${g}"></div>
+      <div class="cell side"><img src="${bw}" alt="ours B&W G${g}"></div>
+      <div class="cell overlay"><img src="${ref}" alt=""><img src="${col}" alt="overlay G${g}"></div></section>`);
+  }
+  document.getElementById("ov").onclick = (e) => {
+    const on = document.body.classList.toggle("ov"); e.target.setAttribute("aria-pressed", on);
+  };
+  if (q.get("ov")) document.getElementById("ov").click();
+  document.querySelectorAll("button[data-g]").forEach((b) => {
+    b.setAttribute("aria-pressed", (b.dataset.g === "all" ? !only : b.dataset.g === only) + "");
+    b.onclick = () => (location.search = b.dataset.g === "all" ? "" : "?g=" + b.dataset.g);
+  });
+</script>
+</body>
+</html>

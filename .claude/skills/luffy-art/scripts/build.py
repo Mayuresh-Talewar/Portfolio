@@ -38,7 +38,7 @@ BONES = [("head", "neck"), ("neck", "chest"), ("chest", "pelvis")] + [
 HEAD = dict(cx=300, cy=118, r=56, chin=201)
 EYE_Y, EYE_DX, NOSE_Y, MOUTH_Y = 148, 27, 163, 178        # eye-line, eye spacing, nose, mouth on the centre line
 HEAD_S = 0.67                                              # head-units: crown..sole ~6.8 heads (post-skip 6.5-7)
-HEAD_Y = 229                                               # chin lands on the neck at y~222
+HEAD_Y = 225                                               # chin lands on the neck at y~222
 HEAD_T = f"translate(300 {HEAD_Y}) scale({HEAD_S}) translate(-300 -212)"
 SHOULDER_W = 1.1                                           # torso x-scale; arms shift out by ARM_DX
 ARM_DX = 9
@@ -83,7 +83,7 @@ def sample(d, step=6.0):
     return loops
 
 
-def ink(d, w=3.4, wmin=0.6, step=6.0):
+def ink(d, w=3.8, wmin=0.6, step=6.0):
     """6 ink: variable-width filled outline. Thick on the shadow side (lower-right), hairline on the lit side."""
     out = []
     for P in sample(d, step):
@@ -100,7 +100,7 @@ def ink(d, w=3.4, wmin=0.6, step=6.0):
     return f'<path fill="{INK}" fill-rule="evenodd" d="{" ".join(out)}"/>'
 
 
-def cel(d, base, shade=None, k=7, w=3.4, extra="", step=6.0):
+def cel(d, base, shade=None, k=7, w=3.8, extra="", step=6.0):
     """7 flat + 8 cel shadow (shape minus itself shifted toward the upper-left light) + 6 ink ring."""
     if not shade:
         return f'<path fill="{base}" d="{d}"{extra}/>' + ink(d, w, step=step)
@@ -204,7 +204,7 @@ def head_stack(p, v):
     ex1, ex2 = 300 - EYE_DX, 300 + EYE_DX
     ear = "M249 128 C234 120 228 146 236 158 C240 166 248 166 252 160 Z"
     face = "M244 112 C242 150 258 182 278 194 C288 200 294 201 300 201 C306 201 312 200 322 194 C342 182 358 150 356 112 C354 82 332 62 300 62 C268 62 246 82 244 112 Z"
-    hair_back = g("hair-back", celh(v.get("hair_back", "M248 100 L234 152 L248 146 L250 162 L350 162 L352 146 L366 152 L352 100 Z"), p["hair"]))
+    hair_back = g("hair-back", v["hair_back_fn"](p) if "hair_back_fn" in v else celh(v.get("hair_back", "M248 100 L234 152 L248 146 L250 162 L350 162 L352 146 L366 152 L352 100 Z"), p["hair"]))
     ears = g("ears", celh(ear, p["skin"], p["skinS"], 4) + taper("M245 136 Q236 144 245 155", 1.8) +
              celh(mx(ear), p["skin"], p["skinS"], 4) + taper(mx("M245 136 Q236 144 245 155"), 1.8))
     head = g("head", ears + celh(face, p["skin"], p["skinS"], 6))
@@ -236,35 +236,44 @@ def head_stack(p, v):
     frames = dict(smile=smile, grin=teeth, laugh=grin, shout=shout)
     show = v.get("mouth", "smile")
     mouth = g("face-mouth", "".join(g("mouth-" + k, d, extra="" if k == show else ' style="display:none"') for k, d in frames.items()))
-    hair = g("hair", v["hair"](p) if "hair" in v else celh(HAIR_D, p["hair"]) +
+    side = "M238 100 Q220 128 222 172 L230 162 L234 178 L242 160 Q254 138 254 108 Z"
+    hair = g("hair", v["hair"](p) if "hair" in v else celh(side, p["hair"]) + celh(mx(side), p["hair"]) + celh(HAIR_D, p["hair"]) +
              taper("M226 170 Q220 182 210 188 M374 170 Q380 182 390 188 M224 128 Q212 126 204 132 M376 128 Q388 126 396 132", 2.6))
     hat = g("hat", '<g transform="translate(0 7) rotate(3 300 86)">' + celh(fray(300, 86, 124, 36), p["hat"], p["hatS"], 8) + f'<path class="t" d="{straw(300, 86, 124, 36)}"/>' +
             celh("M230 84 C224 24 260 0 300 0 C340 0 376 24 370 84 Q300 106 230 84 Z", p["hat"], p["hatS"], 12) +
             f'<path fill="{p["hatH"]}" d="M248 36 Q260 12 290 7 Q266 20 256 50 Z"/>' +
             '<path class="t" d="M258 26 L262 35 M282 16 L283 25 M312 16 L311 25 M338 24 L334 33 M244 44 L250 50 M356 44 L350 50 M270 44 L272 52 M328 44 L326 52"/>' +
             celh("M231 58 Q300 74 369 58 L370 84 Q300 106 230 84 Z", p["band"], p["bandS"], 6) + "</g>", (300, 86))
-    parts = [hair_back, head, g("face-eyes", eyes), scar, mouth, hair] + ([] if v.get("no_hat") else [hat])
+    brows = ""
+    if v.get("expr") == "angry":
+        brows = g("brows", taper(f"M{ex1 - 16} {EYE_Y - 20} Q{ex1} {EYE_Y - 18} {ex1 + 14} {EYE_Y - 9} M{ex2 + 16} {EYE_Y - 20} Q{ex2} {EYE_Y - 18} {ex2 - 14} {EYE_Y - 9}", 7) +
+                  taper(f"M{ex1 - 14} {EYE_Y - 8} L{ex1 + 14} {EYE_Y - 3} M{ex2 + 14} {EYE_Y - 8} L{ex2 - 14} {EYE_Y - 3}", 4.5))
+    parts = [hair_back, head, g("face-eyes", eyes), scar, mouth, hair, brows] + ([] if v.get("no_hat") else [hat])
     # transform attr + CSS transform-origin on one <g> shifts the attr transform -> keep the pivot on an outer group
     return g("head-stack", g("head-frame", "".join(parts), extra=f' transform="{HEAD_T}"'), SKEL["neck"],
-             f'{T(v.get("head_t"))} filter="url(#contour)"')
+             f'{T(v.get("head_t"))}')
 
 
 def arm(side, p, v):
     S = SKEL; f = (lambda d: d) if side == "r" else mx; a = "arm-" + side
     sk, ss = (p["haki"], p["hakiS"]) if v.get("haki") else (p["skin"], p["skinS"])
-    fore = cel(f("M206 356 L176 516 L200 522 L234 356 Z"), sk, ss, 5)
+    fore = cel(f("M206 356 Q192 430 180 510 L200 515 Q218 430 234 356 Z"), sk, ss, 5)
     fist = (cel(f("M172 514 Q165 533 170 546 Q174 554 180 552 Q184 558 190 554 Q195 558 199 551 Q206 534 200 517 Q186 509 172 514 Z"), sk, ss, 5) +
-            taper(f("M171 528 Q185 532 201 528 M171 539 Q185 543 202 539 M184 515 Q189 525 200 524"), 1.5))
+            taper(f("M174 534 L177 548 M181 540 L183 553 M189 541 L190 554"), 1.4) +
+            cel(f("M188 514 Q177 520 179 533 Q187 541 198 535 Q203 525 197 516 Z"), sk, ss, 2, 2.2) + taper(f("M184 528 Q190 531 196 528"), 1.2))
     if v.get("giant_fist") and side == "r":
         fist = (cel("M174 512 Q167 530 169 546 Q171 556 177 554 Q181 559 185 555 Q189 560 193 555 Q197 559 200 553 Q206 546 205 530 Q203 516 200 512 Z", sk, ss, 1.6) +
                 taper("M170 537 Q187 541 205 536 M178 539 Q177 548 178 555 M185 541 L185 557 M193 540 Q194 548 193 556 M171 530 Q181 531 191 538 M196 520 Q199 526 198 532", 0.55))
-    upper = (cel(f("M248 236 C228 240 216 260 213 290 L206 366 Q222 372 238 366 L242 290 C244 266 248 250 244 236 Z"), p["red"], p["redS"], 8) +
+    upper = (cel(f("M254 230 C228 226 214 252 213 290 L206 366 Q222 372 238 366 L242 290 C244 266 252 248 254 230 Z"), p["red"], p["redS"], 8) +
              taper(f("M222 300 Q222 330 218 356"), 1.6))
     bell = (cel(f("M205 350 Q194 406 166 456 Q178 468 188 456 Q198 470 208 458 Q218 472 228 458 Q238 468 246 452 Q234 410 239 350 Z"), p["red"], p["redS"], 8) +
             taper(f("M196 420 L182 456 M214 412 L208 458 M228 420 L230 452 M216 372 Q214 392 210 404"), 1.6))
-    cap = cel(f("M250 234 C232 234 218 248 216 270 L242 276 Z"), p["red"], p["redS"], 5)
+    cap = ""
     if v.get("no_sleeves"):  # bare upper arm (G4)
         upper, cap, bell = cel(f("M248 236 C228 238 214 256 212 290 L204 372 Q220 380 236 372 L238 300 C242 270 250 254 248 236 Z"), sk, ss, 6), "", ""
+    if v.get("haki"):  # Boundman: bulging bicep/forearm masses (inflated muscle, not tubes)
+        upper = cel(f("M250 234 C222 222 194 244 194 288 C194 324 210 346 202 374 Q220 388 240 374 C244 340 254 300 250 234 Z"), sk, ss, 6)
+        fore = cel(f("M204 352 C174 398 164 462 176 510 L206 518 C226 470 244 410 238 352 Z"), sk, ss, 6)
     if v.get("haki"):  # Boundman: red flame streaks on the black haki
         upper += taper(f("M232 262 Q220 300 226 330 M222 300 Q212 340 216 380"), 4, p["flame"])
         fore += taper(f("M210 452 Q198 480 196 506"), 4, p["flame"])
@@ -275,7 +284,7 @@ def arm(side, p, v):
     fore_g = g(a + "-forearm", fore + fist_g + bell, S["elbow_" + side], T(fx.get("forearm")))
     inner = g(a + "-upper", fore_g + upper, sh, T(fx.get("upper"))) + g(a + "-shoulder", cap, sh)
     # pivots inside are local (pre-shift); the outer pivot is global
-    return g(a, f'<g transform="translate({dx} 0)">{inner}</g>', (sh[0] + dx, sh[1]), T(fx.get("all")) + ' filter="url(#contour)"')
+    return g(a, f'<g transform="translate({dx} 0)">{inner}</g>', (sh[0] + dx, sh[1]), T(fx.get("all")) + '')
 
 
 def leg(side, p, v):
@@ -311,19 +320,18 @@ def body(p, v):
              "".join(f'<circle fill="{p["gold"]}" class="o" style="stroke-width:1.6" cx="{x}" cy="{y}" r="4.5"/><circle fill="#fff" cx="{x - 1.5}" cy="{y - 1.5}" r="1.2"/>'
                      for x, y in ((258, 282), (256, 314), (254, 346), (252, 378))))
     knot = g("sash-knot", cel("M338 412 Q364 404 368 426 Q370 448 350 450 Q334 444 338 412 Z", p["sash"], p["sashS"], 5) +
-             cel("M344 444 Q366 480 364 530 Q374 570 382 616 Q366 626 346 620 Q342 580 338 550 Q330 500 336 448 Z", p["sash"], p["sashS"], 7) +
-             f'<path fill="{p["sashH"]}" d="M340 460 Q342 520 348 580 L344 580 Q338 520 337 460 Z"/>' +
-             taper("M344 480 Q348 530 352 590 M356 452 Q358 478 356 498 M362 560 Q368 590 370 612", 1.6))
+             g("sash-tail", cel("M344 444 Q372 480 374 530 Q386 572 396 618 Q370 632 342 622 Q336 580 332 550 Q324 500 336 448 Z", p["sash"], p["sashS"], 7) +
+               f'<path fill="{p["sashH"]}" d="M340 460 Q342 520 348 580 L344 580 Q338 520 337 460 Z"/>' +
+               taper("M344 480 Q350 530 356 596 M358 452 Q362 478 360 498 M368 560 Q376 590 380 614", 1.6), (350, 446), T(v.get("tail_t"))))
     neck = g("neck", cel("M290 186 L289 228 Q300 233 311 228 L310 186 Z", p["skin"], p["skinS"], 6, 2.4) +
              f'<path fill="{p["skinS"]}" d="M290 200 Q300 214 310 200 L310 212 Q300 222 290 212 Z"/>')
     wide = f'<g transform="translate(300 0) scale({SHOULDER_W} 1) translate(-300 0)">{torso + xs + shorts + sash + card + knot}</g>'
-    return neck, g("body", wide, SKEL["pelvis"], ' filter="url(#contour)"')
+    return neck, g("body", wide, SKEL["pelvis"], '')
 
 
 DEFS = """<defs>
 <pattern id="hatch" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="5" height="5" fill="#fff"/><line x1="0" y1="0" x2="0" y2="5" stroke="#1B1B1B" stroke-width="1.6"/></pattern>
 <pattern id="tone" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="5" height="5" fill="#fff"/><circle cx="2.5" cy="2.5" r="1.05" fill="#1B1B1B"/></pattern>
-<filter id="contour" x="-10%" y="-10%" width="120%" height="120%"><feMorphology in="SourceAlpha" operator="dilate" radius="0.8" result="d"/><feFlood flood-color="#1B1B1B"/><feComposite in2="d" operator="in"/><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter>
 </defs>
 <style>.o{stroke:#1B1B1B;stroke-width:2.6;stroke-linejoin:round;stroke-linecap:round}.t{fill:none;stroke:#1B1B1B;stroke-width:1;stroke-linecap:round}</style>"""
 
@@ -346,7 +354,7 @@ def cloud(cx, cy, rx, ry, n=9, seed=1, bump=0.55):
 def puffs(p, items, fill="steam", shade="steamS", k=6, id_="fx-steam"):
     curl = lambda cx, cy, rx, *_: taper(f"M{cx - rx * .3:.0f} {cy + rx * .15:.0f} Q{cx - rx * .35:.0f} {cy - rx * .3:.0f} {cx + rx * .05:.0f} {cy - rx * .28:.0f} "
                                         f"Q{cx + rx * .35:.0f} {cy - rx * .1:.0f} {cx + rx * .1:.0f} {cy + rx * .08:.0f}", max(1.4, rx / 22))
-    return g(id_, "".join(cel(cloud(*it), p[fill], p[shade], k, w=2.4, step=15) + curl(*it) for it in items))
+    return g(id_, "".join(cel(cloud(*it), p[fill], p[shade], k, w=2.4, step=18) + curl(*it) for it in items))
 
 
 def hat_back(p, cx=300, cy=232, rx=110, ry=28, rot=0):  # hat hanging on his back: brim peeks out behind the shoulders
@@ -368,13 +376,21 @@ G5_HAIR = ("M238 120 Q206 104 216 76 Q196 60 214 40 Q230 46 236 56 Q226 24 252 8
            "Q380 124 366 140 L360 112 Q330 94 300 98 Q268 94 242 116 Z")  # rounded lobes read as an afro/cloud (G5 iter 4) -> keep flame tongues
 
 
-def g5_hair(p):  # flame-like white hair flowing up and to his left, with curls
-    curls = taper("M250 40 Q240 26 254 20 Q264 26 256 34 M300 10 Q294 -4 308 -6 Q316 2 308 8 M356 20 Q368 8 378 20 Q372 30 364 26 "
-                  "M386 70 Q398 62 404 74 M232 80 Q222 70 232 62 M326 50 Q336 40 344 50", 2.2)
-    bangs = celh("M238 110 Q228 140 228 168 Q244 148 250 132 Q254 146 256 156 Q262 132 270 120 Q276 136 282 142 Q288 124 296 118 Q298 136 300 152 "
+G5_MASS = ("M236 132 Q206 120 214 92 Q194 80 200 58 Q220 66 228 70 Q216 40 232 18 Q246 40 256 46 Q252 14 276 -6 Q284 22 296 30 "
+           "Q300 -2 330 -24 Q330 8 340 18 Q356 -4 392 -14 Q380 12 380 26 Q404 14 440 18 Q420 34 414 48 Q440 48 470 64 Q444 72 432 84 "
+           "Q452 96 462 118 Q432 112 410 116 Q414 132 404 150 Q384 134 366 140 L360 112 Q330 94 300 98 Q268 94 242 116 Z")  # pointed flame tongues, not round lobes
+
+
+def g5_hair_back(p):  # flame/wave mass sweeping back toward the cloud scarf, with spiral curls
+    curls = taper("M250 44 Q238 28 254 22 Q266 28 258 38 M318 6 Q312 -10 328 -10 Q336 0 326 6 M396 6 Q408 -6 420 6 Q414 18 404 14 "
+                  "M452 70 Q466 62 472 76 Q464 86 456 80 M216 84 Q206 72 218 64 M352 40 Q362 30 372 40", 2.4)
+    return celh(G5_MASS, p["hair"], p["hairS"], 10) + curls
+
+
+def g5_hair(p):  # white bangs in front of the face
+    return celh("M240 116 C236 70 266 50 300 50 C334 50 364 70 360 112 L362 110 Q370 140 374 168 Q358 150 352 132 Q350 144 346 156 Q340 136 334 120 Q328 128 322 142 Q318 132 312 118 Q306 132 300 152 Q298 136 296 118 Q288 124 282 142 Q276 136 270 120 Q262 132 256 156 Q254 146 250 132 Q244 148 228 168 Q228 140 240 116 Z", p["hair"], p["hairS"], 5)
+    return celh("M238 110 Q228 140 228 168 Q244 148 250 132 Q254 146 256 156 Q262 132 270 120 Q276 136 282 142 Q288 124 296 118 Q298 136 300 152 "
                 "Q306 132 312 118 Q318 132 322 142 Q328 128 334 120 Q340 136 346 156 Q350 144 352 132 Q358 150 374 168 Q370 140 362 110 Z", p["hair"], p["hairS"], 5)
-    big = '<g transform="translate(310 112) scale(1.35) translate(-300 -112)">'  # bigger flame mass reads as the climax silhouette
-    return big + celh(G5_HAIR, p["hair"], p["hairS"], 10) + curls + "</g>" + bangs
 
 
 def ribbon(pts, ws, bump=0.9):
@@ -387,12 +403,12 @@ def ribbon(pts, ws, bump=0.9):
 
 
 def g5_collar(p):  # smooth cloud scarf round the shoulders, tail flowing up to his left
-    pts = [(206, 232), (230, 250), (262, 260), (300, 264), (338, 260), (370, 250), (396, 232), (418, 204), (434, 172), (446, 140),
-           (462, 110), (482, 86), (506, 70)]
-    ws = [14, 20, 22, 22, 22, 20, 20, 21, 21, 19, 16, 13, 8]
+    # sparse points + low bump = a few big soft lobes (dense points read as a feather boa); tail thins to a flame tip
+    pts = [(204, 230), (250, 258), (300, 266), (350, 258), (396, 232), (426, 184), (446, 136), (478, 92), (520, 62)]
+    ws = [12, 22, 24, 22, 22, 22, 18, 11, 2]
     curls = taper("M296 262 Q288 252 300 248 Q308 254 302 258 M240 250 Q234 240 246 238 M364 250 Q358 240 370 238 "
                   "M426 186 Q420 176 432 172 M452 128 Q446 118 458 116", 2)
-    return g("fx-cloud-collar", cel(ribbon(pts, ws), p["steam"], p["steamS"], 6, w=2.4) + curls)
+    return g("fx-cloud-collar", cel(ribbon(pts, ws, 0.6), p["steam"], p["steamS"], 6, w=2.4) + curls)
 
 
 def g5_bg(p):  # colour-climax burst (colour version only; hide #fx-climax for a plain background)
@@ -402,13 +418,21 @@ def g5_bg(p):  # colour-climax burst (colour version only; hide #fx-climax for a
     return f'<g id="fx-climax"><rect width="600" height="800" fill="#FFF4D6"/><path fill="#FFE39A" d="{rays}"/><circle cx="300" cy="330" r="190" fill="#FFFBEF" opacity=".8"/></g>'
 
 
-def g2_steam(p):  # dense, overlapping, rising steam mass behind the body (seeded, so it is stable between builds)
+def g2_steam(p):  # billowing clusters that hug the body (shoulders, arms, knees, feet) - seeded so builds are stable
     r = random.Random(42); items = []
-    for i in range(18):
-        side = -1 if i % 2 else 1; y = 790 - i * 34 + r.uniform(-10, 10)
-        x = 300 + side * r.uniform(110, 250) * (0.75 if y < 200 else 1)
-        rx = r.uniform(30, 58); items.append((x, y, rx, rx * r.uniform(.6, .8), 9, i))
+    for i, (ax, ay) in enumerate(((196, 236), (404, 236), (150, 400), (450, 400), (110, 580), (490, 580), (160, 760), (440, 760), (300, 790))):
+        for j in range(2):
+            rx = r.uniform(34, 52); items.append((ax + r.uniform(-30, 30), ay + r.uniform(-30, 20) - j * 34, rx, rx * .72, 8, i * 3 + j))
     return puffs(p, items)
+
+
+def flames(p):  # Boundman flame tattoo: curled tongues licking up the chest sides and shoulders (mirrored)
+    out = ""
+    for x, y, sc in ((222, 344, 1.0), (236, 300, .8), (214, 284, .7), (250, 258, .55)):
+        d = (f"M{x - 10 * sc:.0f} {y} Q{x - 16 * sc:.0f} {y - 22 * sc:.0f} {x - 4 * sc:.0f} {y - 36 * sc:.0f} Q{x - 2 * sc:.0f} {y - 22 * sc:.0f} {x + 4 * sc:.0f} {y - 20 * sc:.0f} "
+             f"Q{x + 2 * sc:.0f} {y - 42 * sc:.0f} {x + 14 * sc:.0f} {y - 56 * sc:.0f} Q{x + 12 * sc:.0f} {y - 30 * sc:.0f} {x + 18 * sc:.0f} {y - 16 * sc:.0f} Q{x + 18 * sc:.0f} {y - 4 * sc:.0f} {x + 8 * sc:.0f} {y} Z")
+        out += cel(d, p["flame"], None, w=1.6) + cel(mx(d), p["flame"], None, w=1.6)
+    return out
 
 
 STEAM = dict(steam="#FFFFFF", steamS="#E7DCE6")
@@ -418,14 +442,14 @@ GEARS = {
     "g1": dict(head_t="rotate(-3)", upper_t="rotate(-1)",
                **{"arm-r": dict(all="rotate(7)", forearm="rotate(-10)"), "arm-l": dict(all="rotate(-5)", forearm="rotate(12)"),
                   "leg-r": dict(thigh="rotate(4)", shin="rotate(-3)"), "leg-l": dict(thigh="rotate(-3)", shin="rotate(2)")}),
-    "g2": dict(mouth="grin", brows=True, art_t="translate(0 64)", head_t="rotate(0)",
-               **{"arm-r": dict(all="rotate(10)", forearm="rotate(-28)"), "arm-l": dict(all="rotate(-10)", forearm="rotate(28)"),
+    "g2": dict(mouth="grin", expr="angry", art_t="translate(0 64)", head_t="rotate(0)",
+               **{"arm-r": dict(all="rotate(10)", forearm="rotate(-28)", fist="scale(1.5)"), "arm-l": dict(all="rotate(-10)", forearm="rotate(28)", fist="scale(1.5)"),
                   "leg-r": dict(thigh="rotate(56)", shin="rotate(-60)", foot="rotate(4)"),
                   "leg-l": dict(thigh="rotate(-56)", shin="rotate(60)", foot="rotate(-4)")},
                pal_color=dict(steam="#FFF5F8", steamS="#EBC7D6", skin="#F9AE9F", skinS="#DC7B78"), pal_bw=dict(steam="#FFFFFF", steamS="url(#tone)"),
                fx_back=g2_steam,
                fx_front=lambda p: puffs(p, [(244, 262, 30, 18, 9, 7), (358, 258, 32, 19, 9, 8), (230, 706, 34, 16, 9, 11)], id_="fx-steam-front") +
-               g("fx-steam-lines", taper("M196 210 Q184 170 200 130 M404 200 Q418 160 402 120 M150 400 Q138 360 154 320 M452 390 Q466 350 450 310", 2.4))),
+               g("fx-steam-lines", taper("M206 232 Q196 212 206 192 Q216 172 206 152 M394 232 Q404 212 394 192 Q384 172 394 152 M186 380 Q176 360 186 340 M414 380 Q424 360 414 340", 2.2))),
     "g3": dict(mouth="grin", brows=True, giant_fist=True, art_t="translate(372 770) scale(0.58) translate(-300 -760)",
                upper_t="rotate(-14)", head_t="rotate(-8)",
                css='<style>#arm-r-fist path,#arm-r-forearm path{vector-effect:non-scaling-stroke}</style>',
@@ -433,21 +457,20 @@ GEARS = {
                   "arm-l": dict(all="rotate(-38)", forearm="rotate(-70)"),
                   "leg-r": dict(thigh="rotate(26)", shin="rotate(-16)"), "leg-l": dict(thigh="rotate(-8)", shin="rotate(24)")},
                fx_front=lambda p: g("fx-impact", taper("M60 120 L120 170 M40 260 L118 270 M120 30 L160 110 M420 60 L370 130 M470 200 L400 230", 3))),
-    "g4": dict(mouth="shout", brows=True, haki=True, no_sleeves=True, no_cardigan=True, no_hat=True, hair=g4_hair,
+    "g4": dict(mouth="shout", expr="angry", haki=True, no_sleeves=True, no_cardigan=True, no_hat=True, hair=g4_hair,
                art_t="translate(0 -24)", head_t="rotate(4)", upper_t="rotate(3)",
                hair_back="M240 100 L222 160 L244 150 L250 168 L350 168 L356 150 L378 160 L360 100 Z",
-               torso="M290 212 C250 214 214 222 206 252 C200 300 206 380 238 440 L362 440 C394 380 400 300 394 252 C386 222 350 214 310 212 Z",
+               torso="M290 212 C246 212 208 228 204 262 C198 324 204 404 248 446 L352 446 C396 404 402 324 396 262 C392 228 354 212 310 212 Z",
                arms_front=True,
-               **{"arm-r": dict(all="rotate(24) scale(1.6 1.08)", forearm="rotate(-105)", fist="scale(1.4)"),
-                  "arm-l": dict(all="rotate(-28) scale(1.6 1.08)", forearm="rotate(18)", fist="scale(1.4)"),
+               **{"arm-r": dict(all="rotate(24) scale(1.3 1.05)", forearm="rotate(-105)", fist="scale(1.8)"),
+                  "arm-l": dict(all="rotate(-28) scale(1.3 1.05)", forearm="rotate(18)", fist="scale(1.8)"),
                   "leg-r": dict(thigh="rotate(34)", shin="rotate(-66)"), "leg-l": dict(thigh="rotate(-28)", shin="rotate(58)")},
                pal_color=dict(STEAM, flame="#C8141E", steamS="#D5D3DC"), pal_bw=dict(steam="#FFFFFF", steamS="url(#tone)", flame="#FFFFFF"),
                fx_upper_back=lambda p: hat_back(p, 300, 226, 100, 26),
-               fx_mid=lambda p: g("fx-flame-tattoo", taper("M232 262 Q252 292 240 324 M252 248 Q272 274 262 300 M368 262 Q348 292 360 324 M348 248 Q328 274 338 300 "
-                                                          "M220 300 Q236 324 226 352 M380 300 Q364 324 374 352 M266 238 Q280 252 276 270 M334 238 Q320 252 324 270", 9, p["flame"])) +
+               fx_mid=lambda p: g("fx-flame-tattoo", flames(p)) +
                g("fx-steam-scarf", cel(ribbon([(176, 286), (196, 244), (240, 214), (300, 204), (360, 214), (404, 244), (424, 286)],
                                                [3, 6, 7, 6, 7, 6, 3], 0.7), p["steam"], p["steamS"], 3, w=1.6, extra=' opacity=".75"'))),
-    "g5": dict(mouth="laugh", eyes="g5", no_hat=True, hair=g5_hair,
+    "g5": dict(mouth="laugh", eyes="g5", no_hat=True, hair=g5_hair, hair_back_fn=g5_hair_back, tail_t="rotate(-62)",
                art_t="translate(300 760) scale(0.84) translate(-300 -760) translate(0 -70)", upper_t="rotate(-9)", head_t="rotate(-10)",
                **{"arm-r": dict(all="rotate(160)", forearm="rotate(-55)"), "arm-l": dict(all="rotate(-78)", forearm="rotate(-55)"),
                   "leg-r": dict(thigh="rotate(72)", shin="rotate(-105)", foot="rotate(10)"),
@@ -474,7 +497,7 @@ def build(gear, base):
     upper = g("upper-body", fx("fx_upper_back") + neck + ("" if v.get("arms_front") else arms) + bod + fx("fx_mid") +
               (arms if v.get("arms_front") else "") + head_stack(p, v),
               (300, 480), T(v.get("upper_t")))
-    layers = [fx("fx_bg"), f'<g id="pose"{T(v.get("art_t"))}>', fx("fx_back"), g("legs", leg("r", p, v) + leg("l", p, v), extra=' filter="url(#contour)"'),
+    layers = [fx("fx_bg"), f'<g id="pose"{T(v.get("art_t"))}>', fx("fx_back"), g("legs", leg("r", p, v) + leg("l", p, v), extra=''),
               upper, fx("fx_front"), "</g>"]
     return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 800" width="1200" height="1600" id="luffy-{gear}">\n'
             f'<title>Straw-hat pirate (fan art, {gear})</title>\n{DEFS}{v.get("css", "")}\n{construct()}\n<g id="art">\n' + "\n".join(layers) + "\n</g>\n</svg>\n")

@@ -43,3 +43,7 @@ next-env.d.ts
 
 # duplicate of .claude/skills for other tools
 .agents/
+
+# Luffy reference images: internal comparison only, never commit
+docs/references/luffy/
+docs/compare/

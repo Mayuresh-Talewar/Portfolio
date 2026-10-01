@@ -93,6 +93,36 @@ clean ink, flat base colours, then a 2-tone cel shadow from one light source, a 
   one), `hat` (or `hat-back` when hatless), `hair`, and the nested arm chain. Ids replaced in ART-002: `shins`, `cuffs` and `sandals` were
   split into `leg-r/l-thigh`, `leg-r/l-shin` and `sandal-r/l`. `sash`, `shorts`, `cardigan`, `torso`, `scar` and `x-scar` are unchanged.
 
+### ART-003 Chrome review (docs/luffy-compare.html?g=N, overlay with &ov=1) - mistakes found
+Checked OK: the scar is under HIS LEFT eye; the sash knot is on HIS LEFT hip; there are 4 gold buttons on the viewer-left panel; the X-scar
+is on the chest; the shorts have fluffy cuffs; the sandals are thong straps.
+- ALL: the hands are mittens (no thumb, no finger creases); the forearms are straight tubes with no wrist taper.
+- ALL (perf): 10 SVGs with a feMorphology contour filter froze a Chrome tab. Fix: the filter was dropped (the ink rings already give the contour).
+- G1 (6): side hair locks are thin dangling strands (the ref has thick black masses to the cheek); the shoulder cap reads as an epaulette
+  seam; the sash tail is narrower than the ref (about leg-wide); the neck is too short; the hands are mittens; the shorts end at the knee (ref: below).
+- G2 (5): steam puffs float as separate beans (the ref has billowing masses hugging the body plus steam rising off the skin); the expression is happy
+  with wide eyes (ref: angry, narrowed eyes, brows down); the fists are small (ref: big, foreshortened in front); the pink flush is too weak; the hands are mittens.
+- G3 (4): the arm is not balloon-thick; the fist has no thumb; the twist reads only through rotation (no torso foreshortening); the hat should fly off.
+- G4 (6): the arms are thin long tubes (ref: bulbous biceps/forearms, huge fists); the flame tattoos are straight slashes like claw marks (ref: curled
+  flame tongues); the expression is a happy grin (ref: angry shout, brows down); no steam glow around the limbs; the hat string around the neck is missing; the torso is a box (ref: round barrel belly).
+- G5 (6): the bottom edge of the hair mass draws a line across the forehead, which reads as a white HEADBAND; the hair is a spiky crown (ref: waves
+  flowing back toward the cloud scarf, with curls); the sash hangs straight mid-leap (should flow back); the cloud collar is a bead boa (ref: wispy
+  flame-cloud with curl tips); the fists are stumps; the grin should show the full teeth row.
+
+### ART-003 fixes (round 1) and lessons
+- Workflow: run `scripts/sync-compare.sh` to build into `docs/compare/` ONLY, then open `docs/luffy-compare.html?g=N` (`&ov=1` for the overlay).
+  Load ONE gear per page, because 10 heavy SVGs stall a Chrome tab. Never write `public/art/luffy` unless the coordinator promotes a drop.
+- Fists: a thumb wrapped over the front plus 3 finger creases turns a mitten into a fist. Forearms taper to the wrist (Q curve, not a trapezoid).
+- G1: side hair = thick black masses to the cheek (`side` + `mx(side)`) under the fringe. The sleeve tube now includes the shoulder
+  (a separate cap read as an epaulette seam). Head up 4 for a visible neck. The sash tail is as wide as a leg.
+- G5: a hair mass in FRONT draws its bottom contour across the forehead, which reads as a headband. Put the mass in `hair_back_fn` (behind the
+  face) and give the bangs a crown cap. Flame hair needs POINTED tongues; round Q-lobes read as an afro or cloud.
+- G5 collar: sparse points (about 45 apart) with a low bump give soft lobes; dense points give a feather boa. Taper the tail to a 2-unit tip.
+- Motion physics: in a leap the sash tail must trail (`tail_t`, pivot at the knot), not hang straight.
+- `expr="angry"`: brows drawn AFTER the hair (otherwise the fringe hides them), plus slanted heavy lids. Use it for G2/G4.
+- G4: haki limbs get their own bulging bicep/forearm paths, so the arm reads as muscle, not as a horizontally scaled tube. Flame tattoos are
+  filled curled tongues on the chest SIDES; slash strokes read as claw marks.
+
 ### Gears (same rig, `GEARS` dict)
 - (G3) Swinging a full arm sideways leaves the 600x800 canvas, because the arm is about 285 long. Fix: shrink the whole pose with
   `art_t` (scale 0.62 about the soles) and raise the arm overhead (rotate 165), so the scaled fist fits above the head.
