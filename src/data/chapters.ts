@@ -13,6 +13,8 @@ export const chapters: Chapter[] = [
   {
     id: "the-beginning",
     number: 1,
+    gear: 1,
+    gearName: "Gear 1",
     title: "The Beginning",
     subtitle: "Diploma, Anjuman Polytechnic",
     period: "2018 – 2021",
@@ -26,6 +28,8 @@ export const chapters: Chapter[] = [
   {
     id: "academy-arc",
     number: 2,
+    gear: 2,
+    gearName: "Gear 2",
     title: "Academy Arc",
     subtitle: "B.Tech CSE, G H Raisoni University",
     period: "2021 – 2024",
@@ -39,6 +43,8 @@ export const chapters: Chapter[] = [
   {
     id: "first-quest",
     number: 3,
+    gear: 3,
+    gearName: "Gear 3",
     title: "First Quest",
     subtitle: "Full Stack Developer Intern, Technology World Creater",
     period: "Mar 2024 – Aug 2024",
@@ -62,6 +68,8 @@ export const chapters: Chapter[] = [
   {
     id: "forging-the-blade",
     number: 4,
+    gear: 4,
+    gearName: "Gear 4",
     title: "Forging the Blade",
     subtitle: "Frontend Developer, Softtronix",
     period: "Sep 2024 – Jul 2025",
@@ -84,6 +92,8 @@ export const chapters: Chapter[] = [
   {
     id: "the-ai-arc",
     number: 5,
+    gear: 5,
+    gearName: "Gear 5",
     title: "The AI Arc",
     subtitle: "Full Stack Developer, Crestline Intelligence",
     period: "Aug 2025 – Present",

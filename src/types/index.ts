@@ -8,6 +8,8 @@ export type SiteConfig = {
   resume: string;
   image: string;
   socials: { label: string; href: string }[];
+  /** Feature flags; Luffy (fan-art guide) components render only when true. */
+  features: { luffy: boolean };
 };
 
 export type Stat = { value: string; label: string };
@@ -44,6 +46,9 @@ export type Product = { title: string; description: string };
 
 export type Chapter = Part & {
   number: number;
+  /** Career power-up level (Luffy's Gears concept). */
+  gear: 1 | 2 | 3 | 4 | 5;
+  gearName: string;
   /** Plain label shown next to the flavor title, e.g. "Frontend Developer, Softtronix". */
   subtitle: string;
   period: string;
