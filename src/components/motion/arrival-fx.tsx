@@ -21,12 +21,17 @@ export function ArrivalFx({ gear }: { gear: Chapter["gear"] }) {
     mm.add({ desk: MQ.desk, mob: MQ.mob }, (ctx) => {
       const { desk } = ctx.conditions as { desk: boolean };
       const h2 = panel.querySelector("h2");
-      const split = h2 ? SplitText.create(h2, { type: "words,chars", mask: "words" }) : null;
+      // No masks: Dela's tall glyphs would be clipped by mask boxes at this tight leading. Revert when done.
+      const split = h2 ? SplitText.create(h2, { type: "words,chars" }) : null;
       const sfx = q(".sfx");
       const tl = gsap.timeline({ scrollTrigger: { trigger: panel, start: "top 72%", once: true } });
 
       tl.from(q("[data-ribbon]"), { scaleX: 0, duration: 0.45, ease: "power3.out" })
-        .from(split?.chars ?? [], { yPercent: 115, duration: 0.55, stagger: 0.022, ease: "back.out(1.7)" }, 0.12)
+        .from(
+          split?.chars ?? [],
+          { yPercent: 70, autoAlpha: 0, rotation: () => gsap.utils.random(-14, 14), duration: 0.5, stagger: 0.025, ease: "back.out(1.7)", onComplete: () => split?.revert() },
+          0.12,
+        )
         .from(q("[data-landfall]"), { autoAlpha: 0, x: -24, duration: 0.4, ease: "power2.out" }, 0.45)
         .from(q(".kana"), { autoAlpha: 0, y: -30, duration: 0.4, ease: "power2.out" }, 0.6);
 
@@ -36,7 +41,8 @@ export function ArrivalFx({ gear }: { gear: Chapter["gear"] }) {
           .from(sfx, { scaleX: 2.8, scaleY: 0.35, autoAlpha: 0, duration: 1.2, ease: "elastic.out(1.1, 0.28)", transformOrigin: "100% 50%" }, at);
       }
       if (gear === 2) {
-        tl.from(sfx, { x: desk ? -260 : -120, skewX: 35, autoAlpha: 0, duration: 0.55, ease: "power4.out" }, at).fromTo(
+        tl.from(sfx, { x: desk ? -260 : -120, skewX: 35, autoAlpha: 0, duration: 0.55, ease: "power4.out" }, at)
+          .fromTo(
           q("[data-puff]"),
           { scale: 0, x: 0, y: 0, autoAlpha: 1 },
           {

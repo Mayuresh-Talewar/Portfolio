@@ -354,19 +354,6 @@ section[data-mode] {
   }
 }
 
-/* Nav gear pips */
-.pip {
-  width: 10px;
-  height: 16px;
-  transform: skewX(-14deg);
-  border: 2px solid var(--color-ink);
-  background: transparent;
-  transition: background-color 300ms;
-}
-.pip[data-on="true"] {
-  background: var(--pip, var(--color-ink));
-}
-
 @media (max-width: 767px) {
   :root {
     --cut: 1.25rem;

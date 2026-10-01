@@ -7,12 +7,15 @@ export function ChapterHeader({
   eyebrow,
   label,
   className,
+  compact,
 }: {
   id: string;
   title: string;
   eyebrow?: string;
   label?: string;
   className?: string;
+  /** Smaller title when a character shares the panel. */
+  compact?: boolean;
 }) {
   return (
     <header className={cn("relative", className)}>
@@ -24,7 +27,10 @@ export function ChapterHeader({
       <h2
         id={id}
         data-title
-        className="mt-3 max-w-[13ch] font-display text-[clamp(2.4rem,6.4vw,5.6rem)] leading-[0.92] tracking-[-0.01em] uppercase text-balance"
+        className={cn(
+          "mt-3 font-display leading-[0.92] tracking-[-0.01em] uppercase text-balance",
+          compact ? "max-w-[9.5ch] text-[clamp(2.3rem,5vw,4.4rem)]" : "max-w-[13ch] text-[clamp(2.4rem,6.4vw,5.6rem)]",
+        )}
       >
         {title}
       </h2>

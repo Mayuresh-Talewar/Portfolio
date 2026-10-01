@@ -7,6 +7,9 @@ import { ChapterNav, type NavItem } from "@/components/chapter-nav";
 import { ChapterSpread } from "@/components/chapter-spread";
 import { ContactForm } from "@/components/contact-form";
 import { GuideLayer } from "@/components/guide-layer";
+import { Greet } from "@/components/luffy/greet";
+import { LuffyArt, luffySrc } from "@/components/luffy/luffy-art";
+import { LuffyRig } from "@/components/luffy/luffy-rig";
 import { GaidenStrip } from "@/components/motion/gaiden-strip";
 import { RouteDraw } from "@/components/motion/route-draw";
 import { WantedDrop } from "@/components/motion/wanted-drop";
@@ -18,6 +21,9 @@ import { WantedPoster } from "@/components/wanted-poster";
 import { cn } from "@/lib/utils";
 
 const current = chapters[chapters.length - 1];
+// Kill switch for every Luffy render (docs/10 §5 takedown runbook).
+const luffy = siteConfig.features.luffy;
+const greetSrc = luffy ? luffySrc(1, "color") : null;
 const { cover, gaiden, status, finale } = parts;
 
 // Volume order: Cover → Ch.1–5 → Gaiden → Status Window → Finale.
@@ -60,7 +66,7 @@ export default function Home() {
         >
           {/* Hook point: break-out slot for the Sprint 5 character (tech plan §6). */}
           <div data-slot="break-out" aria-hidden />
-          <div className="grid items-center gap-x-8 gap-y-12 md:grid-cols-12">
+          <div className={cn("grid items-center gap-x-8 md:grid-cols-12", luffy ? "gap-y-44 md:gap-y-12" : "gap-y-12")}>
             <div className="md:col-span-7">
               <p className="flex items-center gap-3">
                 <span className="grid size-14 place-items-center rounded-full border-[3px] border-ink bg-jolly font-display text-[0.7rem] leading-[0.95] text-paper text-center">
@@ -98,14 +104,33 @@ export default function Home() {
                 </a>
               </div>
             </div>
-            <div className="md:col-span-5">
-              <div className="rotate-[2.5deg]">
+            <div className="relative md:col-span-5">
+              {greetSrc && (
+                <Greet className="absolute -top-[9.5rem] right-1 aspect-[3/4] h-40 md:top-auto md:right-[80%] md:-bottom-[6.5rem] md:h-[min(52svh,460px)]">
+                  <LuffyRig src={greetSrc} enter="hello" label="Fan art: a grinning cartoon pirate in a straw hat waving hello" className="relative size-full">
+                    <LuffyArt gear={1} mode="color" eager alt="" className="size-full object-contain" />
+                  </LuffyRig>
+                  <p
+                    data-bubble
+                    className="bubble absolute top-1 right-[88%] w-40 px-3 py-3 text-xs leading-snug md:top-[4%] md:right-[78%] md:w-52 md:text-sm"
+                  >
+                    {cover.guide.line}
+                  </p>
+                </Greet>
+              )}
+              <div className="relative z-10 rotate-[2.5deg]">
                 <WantedDrop>
                   <WantedPoster name={siteConfig.name} wanted={cover.wanted} stats={stats} />
                 </WantedDrop>
               </div>
             </div>
           </div>
+          {luffy && (
+            <p className="relative z-10 mt-12 max-w-[64ch] text-xs font-semibold md:mt-8">
+              Character art is original fan art, a personal tribute. ONE PIECE © Eiichiro Oda / Shueisha, Toei Animation; not
+              affiliated or endorsed.
+            </p>
+          )}
         </Section>
 
         {/* ───────── CONTENTS: the Grand Line chart ───────── */}
@@ -153,7 +178,7 @@ export default function Home() {
 
         {/* ───────── CH.1–5 ───────── */}
         {chapters.map((c) => (
-          <ChapterSpread key={c.id} chapter={c} projects={projects.filter((p) => p.chapterId === c.id)} />
+          <ChapterSpread key={c.id} chapter={c} projects={projects.filter((p) => p.chapterId === c.id)} luffy={luffy} />
         ))}
 
         {/* ───────── GAIDEN ───────── */}
@@ -258,11 +283,21 @@ export default function Home() {
               </div>
             </div>
           </div>
-          <p aria-hidden className="mt-16 flex justify-end">
-            <span className="sfx inline-flex items-center bg-ink px-6 py-3 text-[clamp(1.6rem,4vw,2.6rem)] [--sfx-fill:var(--color-straw)] [clip-path:polygon(0_0,calc(100%-1.4em)_0,100%_50%,calc(100%-1.4em)_100%,0_100%)] pr-[1.8em]">
+          <div className={cn("mt-16 flex items-end", greetSrc ? "justify-between" : "justify-end")}>
+            {greetSrc && (
+              <Greet on="scroll" className="relative -mb-14 aspect-[3/4] h-56 shrink-0 md:-mb-20 md:h-[26rem]">
+                <LuffyRig src={greetSrc} enter="bye" label="Fan art: a cartoon pirate in a straw hat waving goodbye" className="relative size-full">
+                  <LuffyArt gear={1} mode="color" alt="" className="size-full object-contain" />
+                </LuffyRig>
+                <p data-bubble className="bubble absolute top-0 left-[78%] w-44 px-3 py-3 text-xs leading-snug md:w-56 md:text-sm">
+                  {finale.guide.line}
+                </p>
+              </Greet>
+            )}
+            <span aria-hidden className="sfx inline-flex items-center bg-ink px-6 py-3 text-[clamp(1.6rem,4vw,2.6rem)] [--sfx-fill:var(--color-straw)] [clip-path:polygon(0_0,calc(100%-1.4em)_0,100%_50%,calc(100%-1.4em)_100%,0_100%)] pr-[1.8em]">
               To be continued
             </span>
-          </p>
+          </div>
         </Section>
       </main>
 

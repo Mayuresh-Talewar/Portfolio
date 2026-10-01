@@ -21,7 +21,14 @@ export function GearFive({ children }: { children: ReactNode }) {
       const mm = gsap.matchMedia();
       mm.add({ desk: MQ.desk, mob: MQ.mob }, (ctx) => {
         const { desk } = ctx.conditions as { desk: boolean };
-        const setFlooded = (p: number) => section?.setAttribute("data-flooded", String(p > 0.6));
+        let woke = false;
+        const setFlooded = (p: number) => {
+          section?.setAttribute("data-flooded", String(p > 0.6));
+          if (p > 0.62 && !woke) {
+            woke = true; // rubber-hose wobble on the G5 art, 6 beats then stops (no endless loop)
+            gsap.to(el.querySelectorAll('[data-art="body"]'), { scaleX: 0.95, scaleY: 1.05, yoyo: true, repeat: 5, duration: 0.28, ease: "sine.inOut", transformOrigin: "50% 100%" });
+          }
+        };
         if (section) gsap.set(section, { "--flood": 0 });
         setFlooded(0);
         const call = SplitText.create(el.querySelector(".gear-call"), { type: "chars" });
@@ -47,6 +54,9 @@ export function GearFive({ children }: { children: ReactNode }) {
           )
           .to(".puff", { autoAlpha: 0, duration: 0.12 }, 0.4)
           .fromTo(".gear-flash", { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.06 }, 0.3)
+          // Art swap hidden by the flash (only when the Gear art is rendered).
+          .fromTo('[data-art="prev"]', { autoAlpha: 1 }, { autoAlpha: 0, duration: 0.02 }, 0.34)
+          .fromTo('[data-art="body"]', { autoAlpha: 0, scale: 0.8 }, { autoAlpha: 1, scale: 1, duration: 0.12, ease: "back.out(2)" }, 0.34)
           .to(".gear-flash", { autoAlpha: 0, duration: 0.2 }, 0.42)
           .fromTo(".gear-stage", { scaleX: 1.3, scaleY: 0.75, skewX: -8 }, { scaleX: 1, scaleY: 1, skewX: 0, duration: 0.45, ease: "elastic.out(1.2, 0.3)" }, 0.42)
           .fromTo(".halftone", { autoAlpha: 0 }, { autoAlpha: 0.5, duration: 0.1 }, 0.42)

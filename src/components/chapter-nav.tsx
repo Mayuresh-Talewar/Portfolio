@@ -157,13 +157,13 @@ export function ChapterNav({
             Gear
           </span>
           <meter aria-labelledby="gear-meter-label" min={0} max={maxGear} value={gear} className="sr-only" />
-          <span aria-hidden className="flex gap-[2px] md:gap-[3px]">
+          {/* Gauge bar (CSS only, no glyphs): ink frame, filled segments per Gear reached. */}
+          <span aria-hidden className="flex h-4 -skew-x-12 gap-[2px] border-2 border-ink bg-paper p-[2px]">
             {Array.from({ length: maxGear }, (_, n) => (
               <span
                 key={n}
-                className="pip"
-                data-on={n < gear}
-                style={{ "--pip": PIP[n + 1] } as React.CSSProperties}
+                className="w-2 transition-colors duration-300 md:w-2.5"
+                style={{ background: n < gear ? PIP[n + 1] : "rgb(26 22 18 / 0.12)" }}
               />
             ))}
           </span>
