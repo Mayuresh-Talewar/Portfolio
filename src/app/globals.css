@@ -1,27 +1,69 @@
 @import "tailwindcss";
 
-/* Neutral skeleton styles; design tokens replace these in the reskin. */
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/*
+ * ONE PIECE-flavoured manga volume (DES-010).
+ * Print logic: paper + ink everywhere; red is a spot ink (Ch.3-4); straw/sea only arrive with Gear 5.
+ * Shapes: square panels with ink borders (radius 0). Only speech bubbles are round.
+ */
+@theme {
+  --color-ink: #1a1612;
+  --color-paper: #fbf7ee;
+  --color-newsprint: #f1ece0;
+  --color-parchment: #ecd9a8;
+  --color-parchment-dark: #c9a96a;
+  --color-straw: #f6c233;
+  --color-jolly: #d62718;
+  --color-jolly-ink: #b0160b; /* red for text on paper: 6.1:1 */
+  --color-sea: #0f5c93;
+  --color-sea-deep: #0b2c47;
+  --color-foam: #9fd8f2;
+
+  --font-display: var(--font-dela), "Yu Gothic", "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
+  --font-sfx: var(--font-bangers), var(--font-dela), sans-serif;
+  --font-letter: var(--font-comic), "Comic Sans MS", cursive;
+  --font-sans: var(--font-archivo), system-ui, sans-serif;
+
+  --ease-snap: cubic-bezier(0.2, 0.9, 0.1, 1);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+:root {
+  --page: var(--color-paper);
+  --spot: var(--color-ink);
+  --cut: 2.25rem;
+  --bw: 3px;
+}
+
+html {
+  background: var(--color-ink);
+  overflow-x: clip;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans), system-ui, sans-serif;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
+
+/* Paper grain: one fixed layer (never on scrolling containers). */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  pointer-events: none;
+  opacity: 0.22;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .1 0 0 0 0 .08 0 0 0 0 .06 0 0 0 .35 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
 :focus-visible {
-  outline: 3px solid currentColor;
-  outline-offset: 2px;
+  outline: 3px solid var(--color-jolly);
+  outline-offset: 3px;
+}
+
+::selection {
+  background: var(--color-straw);
+  color: var(--color-ink);
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -38,5 +80,295 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/* ---------- Print modes (data-mode on <section>) ---------- */
+[data-mode="bw"] {
+  --page: var(--color-paper);
+  --spot: var(--color-ink);
+  --spot-text: var(--color-ink);
+}
+[data-mode="duo"] {
+  --page: var(--color-paper);
+  --spot: var(--color-jolly);
+  --spot-text: var(--color-jolly-ink);
+}
+[data-mode="color"] {
+  --page: var(--color-paper);
+  --spot: var(--color-jolly);
+  --spot-text: var(--color-jolly-ink);
+}
+[data-mode="night"] {
+  --page: var(--color-sea-deep);
+  --spot: var(--color-straw);
+  --spot-text: var(--color-straw);
+  color: var(--color-paper);
+}
+section[data-mode] {
+  background-color: var(--page);
+}
+
+@layer components {
+  /* ---------- Textures ---------- */
+  .tone {
+    background-image: radial-gradient(circle, var(--tone-ink, var(--color-ink)) 0.9px, transparent 1.4px);
+    background-size: 7px 7px;
+  }
+  .tone-fade {
+    mask-image: linear-gradient(to bottom, #000, transparent 85%);
+  }
+  .speedlines {
+    background: repeating-conic-gradient(from 0deg at var(--sx, 50%) var(--sy, 50%), var(--lines, var(--color-ink)) 0 0.7deg, transparent 0.7deg 6deg);
+    mask-image: radial-gradient(circle at var(--sx, 50%) var(--sy, 50%), transparent 22%, #000 70%);
+  }
+  .rays {
+    background: repeating-conic-gradient(from 0deg at var(--sx, 70%) var(--sy, 45%), var(--ray-a) 0 7.5deg, var(--ray-b) 7.5deg 15deg);
+  }
+  .parchment {
+    background-color: var(--color-parchment);
+    background-image:
+      radial-gradient(120% 90% at 50% 50%, transparent 55%, rgb(120 72 20 / 0.35) 100%),
+      radial-gradient(40% 30% at 20% 15%, rgb(255 255 255 / 0.35), transparent 70%),
+      radial-gradient(35% 25% at 80% 85%, rgb(140 90 30 / 0.18), transparent 70%);
+    color: var(--color-ink);
+  }
+  .rope {
+    border: 7px solid transparent;
+    border-image: repeating-linear-gradient(45deg, #7a5524 0 5px, #d6ad62 5px 10px, #a97c3c 10px 13px) 7;
+  }
+  .chart-grid {
+    background-image:
+      linear-gradient(rgb(26 22 18 / 0.08) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(26 22 18 / 0.08) 1px, transparent 1px);
+    background-size: 56px 56px;
+  }
+
+  /* ---------- Panels ---------- */
+  .panel {
+    position: relative;
+    isolation: isolate;
+    border: var(--bw) solid var(--color-ink);
+    background: var(--panel-bg, var(--color-paper));
+    color: var(--panel-fg, var(--color-ink));
+  }
+  /* Diagonal cut panel: ink pseudo + inset fill pseudo share one clip shape, giving a true slanted border. */
+  .cut {
+    position: relative;
+    isolation: isolate;
+    clip-path: var(--shape);
+    color: var(--panel-fg, var(--color-ink));
+  }
+  .cut::before,
+  .cut::after {
+    content: "";
+    position: absolute;
+    z-index: -2;
+    inset: 0;
+    background: var(--color-ink);
+  }
+  .cut::after {
+    z-index: -1;
+    inset: var(--bw);
+    background: var(--panel-bg, var(--color-paper));
+    clip-path: var(--shape);
+  }
+  .cut-a {
+    --shape: polygon(0 0, 100% 0, 100% calc(100% - var(--cut)), 0 100%);
+  }
+  .cut-b {
+    --shape: polygon(0 var(--cut), 100% 0, 100% 100%, 0 100%);
+  }
+  .cut-c {
+    --shape: polygon(0 0, 100% 0, 100% 100%, 0 calc(100% - var(--cut)));
+  }
+  .cut-d {
+    --shape: polygon(0 0, 100% var(--cut), 100% 100%, 0 100%);
+  }
+
+  /* ---------- Lettering ---------- */
+  .logotype {
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    line-height: 0.86;
+    letter-spacing: -0.01em;
+    color: var(--color-straw);
+    -webkit-text-stroke: 0.075em var(--color-ink);
+    paint-order: stroke fill;
+    text-shadow: 0.07em 0.07em 0 var(--color-jolly), 0.07em 0.07em 0 var(--color-jolly);
+  }
+  .sfx {
+    font-family: var(--font-sfx);
+    line-height: 0.8;
+    letter-spacing: 0.02em;
+    color: var(--sfx-fill, var(--color-paper));
+    -webkit-text-stroke: 0.09em var(--color-ink);
+    paint-order: stroke fill;
+    white-space: nowrap;
+  }
+  .kana {
+    font-family: var(--font-display);
+    writing-mode: vertical-rl;
+    letter-spacing: -0.05em;
+    color: var(--color-ink);
+  }
+  .caption {
+    font-family: var(--font-letter);
+    font-weight: 700;
+    text-transform: uppercase;
+    line-height: 1.35;
+    letter-spacing: 0.01em;
+    background: var(--color-paper);
+    color: var(--color-ink);
+    border: 2px solid var(--color-ink);
+    padding: 0.7rem 0.9rem;
+    box-shadow: 4px 4px 0 var(--color-ink);
+  }
+  .bubble {
+    position: relative;
+    font-family: var(--font-letter);
+    font-weight: 700;
+    line-height: 1.35;
+    background: var(--color-paper);
+    color: var(--color-ink);
+    border: 3px solid var(--color-ink);
+    border-radius: 50% / 42%;
+    padding: 1.4rem 1.6rem;
+    text-align: center;
+  }
+  .bubble::after {
+    content: "";
+    position: absolute;
+    left: 22%;
+    bottom: -20px;
+    width: 26px;
+    height: 24px;
+    background: var(--color-ink);
+    clip-path: polygon(0 0, 100% 0, 10% 100%);
+  }
+  .bubble::before {
+    content: "";
+    position: absolute;
+    z-index: 1;
+    left: calc(22% + 4px);
+    bottom: -12px;
+    width: 18px;
+    height: 16px;
+    background: var(--color-paper);
+    clip-path: polygon(0 0, 100% 0, 8% 100%);
+  }
+  .ribbon {
+    display: inline-block;
+    font-family: var(--font-sans);
+    font-stretch: 75%;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    background: var(--ribbon-bg, var(--spot));
+    color: var(--ribbon-fg, var(--color-paper));
+    padding: 0.35em 1.4em;
+    clip-path: polygon(0 0, 100% 0, calc(100% - 0.7em) 50%, 100% 100%, 0 100%, 0.7em 50%);
+  }
+
+  /* ---------- Buttons ---------- */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 48px;
+    padding: 0.6rem 1.4rem;
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    text-transform: uppercase;
+    white-space: nowrap;
+    border: 3px solid var(--color-ink);
+    box-shadow: 5px 5px 0 var(--color-ink);
+    transition: transform 160ms var(--ease-snap), box-shadow 160ms var(--ease-snap);
+  }
+  .btn:hover {
+    transform: translate(-2px, -2px) rotate(-1deg);
+    box-shadow: 7px 7px 0 var(--color-ink);
+  }
+  .btn:active {
+    transform: translate(3px, 3px);
+    box-shadow: 1px 1px 0 var(--color-ink);
+  }
+  .btn-straw {
+    background: var(--color-straw);
+    color: var(--color-ink);
+  }
+  .btn-ink {
+    background: var(--color-ink);
+    color: var(--color-paper);
+    box-shadow: 5px 5px 0 var(--color-jolly);
+  }
+  .btn-ink:hover {
+    box-shadow: 7px 7px 0 var(--color-jolly);
+  }
+  .btn-sm {
+    min-height: 40px;
+    padding: 0.35rem 0.9rem;
+    font-size: 0.85rem;
+    box-shadow: 3px 3px 0 var(--color-ink);
+  }
+}
+
+/* ---------- Gear 5 flood (cookbook §9d). --flood unset = 1 = full color (no JS, reduced motion). ---------- */
+.flood-layer {
+  opacity: var(--flood, 1);
+}
+.flood-burst {
+  clip-path: circle(calc(var(--flood, 1) * 75%) at 50% 50%);
+}
+[data-flooded="false"] .flood-ink {
+  --panel-bg: var(--color-paper) !important;
+}
+.flood-ink::after {
+  transition: background-color 500ms;
+}
+.puff {
+  background: var(--color-paper);
+  border: 3px solid var(--color-ink);
+}
+.halftone {
+  background: radial-gradient(var(--color-ink) 30%, transparent 32%) 0 0 / 9px 9px;
+  mix-blend-mode: multiply;
+}
+:is(.puff, .halftone, .gear-flash, .gear-prev) {
+  opacity: 0;
+  visibility: hidden;
+}
+
+/* Cover: one orchestrated load moment, CSS only. */
+@keyframes slam {
+  from {
+    opacity: 0;
+    transform: translateY(-0.25em) scale(1.35) rotate(-4deg);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .slam {
+    animation: slam 0.55s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+    animation-delay: calc(var(--i, 0) * 110ms + 80ms);
+  }
+}
+
+/* Nav gear pips */
+.pip {
+  width: 10px;
+  height: 16px;
+  transform: skewX(-14deg);
+  border: 2px solid var(--color-ink);
+  background: transparent;
+  transition: background-color 300ms;
+}
+.pip[data-on="true"] {
+  background: var(--pip, var(--color-ink));
+}
+
+@media (max-width: 767px) {
+  :root {
+    --cut: 1.25rem;
   }
 }

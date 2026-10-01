@@ -1,17 +1,13 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Archivo, Bangers, Comic_Neue, Dela_Gothic_One } from "next/font/google";
 import { seo } from "./seo";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+// Display logotype + titles; SFX lettering; manga caption lettering; body/UI.
+const dela = Dela_Gothic_One({ variable: "--font-dela", weight: "400", subsets: ["latin"] });
+const bangers = Bangers({ variable: "--font-bangers", weight: "400", subsets: ["latin"] });
+const comic = Comic_Neue({ variable: "--font-comic", weight: ["400", "700"], subsets: ["latin"] });
+const archivo = Archivo({ variable: "--font-archivo", subsets: ["latin"], axes: ["wdth"] });
 
 export const metadata: Metadata = {
   metadataBase: new URL(seo.url),
@@ -66,7 +62,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${dela.variable} ${bangers.variable} ${comic.variable} ${archivo.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <script
