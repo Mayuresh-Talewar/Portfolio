@@ -2,9 +2,6 @@ import type { Chapter, Project } from "@/types";
 import { cn } from "@/lib/utils";
 import { ChapterHeader } from "./chapter-header";
 import { Section } from "./section";
-import { LuffyArt, luffySrc } from "./luffy/luffy-art";
-import { LuffyRig } from "./luffy/luffy-rig";
-import { PistolArm } from "./luffy/pistol-arm";
 import { ArrivalFx } from "./motion/arrival-fx";
 import { GearFive } from "./motion/gear-five";
 import { StatList } from "./stat-list";
@@ -17,16 +14,11 @@ const PRODUCT_LAYOUT = [
 ];
 
 /** One chapter = one spread: a dominant "island arrival" title panel, narration, and the record. */
-export function ChapterSpread({ chapter: c, projects, luffy = false }: { chapter: Chapter; projects: Project[]; luffy?: boolean }) {
+export function ChapterSpread({ chapter: c, projects }: { chapter: Chapter; projects: Project[] }) {
   const climax = c.gear === 5;
   const flip = !climax && c.number % 2 === 0;
   const thin = !c.metrics && !c.products;
   const titleId = `${c.id}-title`;
-  // Gear art (features.luffy). B&W ink until Gear 5; a missing file falls back to the SFX-only Gear-up.
-  // One Luffy per moment: Gear 1's moment is the Gomu Gomu panel, Gear 5's is the climax splash.
-  const artSrc = luffy && c.gear > 1 && !climax ? luffySrc(c.gear, "bw") : null;
-  const art = !!artSrc;
-  const pistol = luffy && c.gear === 1 ? luffySrc(1, "bw") : null;
 
   const record = (
     <article data-panel className={cn("panel p-5 md:p-7", !thin && "col-span-12", !thin && (c.metrics ? "md:col-span-8" : "md:col-span-12"), flip && !thin && "md:col-start-5")}>
@@ -34,7 +26,7 @@ export function ChapterSpread({ chapter: c, projects, luffy = false }: { chapter
       <p className="mt-1 font-bold [font-stretch:85%]" style={{ color: "var(--spot-text)" }}>
         {c.org}, {c.location}
       </p>
-      <ul className="mt-4 flex max-w-[72ch] flex-col gap-3">
+      <ul className={cn("mt-4 grid max-w-[72ch] gap-3", !thin && !c.metrics && "max-w-none md:grid-cols-2 md:gap-x-10")}>
         {c.highlights.map((h) => (
           <li key={h} className="relative pl-6 leading-relaxed">
             <span aria-hidden className="absolute top-[0.55em] left-0 size-2.5 rotate-45" style={{ background: "var(--spot)" }} />
@@ -75,27 +67,14 @@ export function ChapterSpread({ chapter: c, projects, luffy = false }: { chapter
     >
       {climax && (
         <GearFive>
-          {luffy && (
-            // Art panel inside the splash: G4 (ink) is swapped for G5 (color) under the white flash.
-            <div className="absolute top-[5%] left-1/2 aspect-[3/4] h-[44%] -translate-x-1/2 -rotate-2 overflow-hidden border-[4px] border-ink bg-paper shadow-[8px_8px_0_var(--color-ink)] md:top-[4%] md:h-[46%]">
-              <LuffyArt gear={4} mode="bw" alt="" data-art="prev" className="absolute inset-0 size-full object-contain" />
-              <LuffyArt
-                gear={5}
-                mode="color"
-                alt="Fan art: a laughing cartoon pirate in white, fist raised, at full power"
-                data-art="body"
-                className="absolute inset-0 size-full object-cover"
-              />
-            </div>
-          )}
-          <div className={cn("flex flex-col items-center", luffy && "self-end pb-[7%]")}>
+          <div className="flex flex-col items-center">
             <p className="gear-prev sfx absolute text-[clamp(4rem,14vw,10rem)]">GEAR {c.gear - 1}</p>
             <p aria-hidden className="ribbon text-sm md:text-base" style={{ "--ribbon-bg": "var(--color-ink)" } as React.CSSProperties}>
               Ch.{c.number}: the climax
             </p>
             <p
               aria-hidden
-              className={cn("gear-call sfx mt-3", luffy ? "text-[clamp(5rem,16vw,11rem)]" : "text-[clamp(5.5rem,22vw,17rem)]")}
+              className="gear-call sfx mt-3 text-[clamp(5.5rem,22vw,17rem)]"
               style={{ "--sfx-fill": "var(--color-paper)", textShadow: "0.05em 0.06em 0 var(--color-jolly)" } as React.CSSProperties}
             >
               GEAR {c.gear}
@@ -122,7 +101,7 @@ export function ChapterSpread({ chapter: c, projects, luffy = false }: { chapter
           data-gear={c.gear}
           className={cn(
             "cut flood-ink col-span-12 flex flex-col justify-end p-6 pb-12 md:p-10 md:pb-16",
-            art ? "min-h-[36rem]" : "min-h-[29rem]",
+            "min-h-[29rem]",
             "md:col-span-8 md:min-h-[37rem]",
             climax && "cut-b",
             flip ? "cut-d md:col-start-5 md:row-start-1" : !climax && "cut-a",
@@ -130,17 +109,6 @@ export function ChapterSpread({ chapter: c, projects, luffy = false }: { chapter
           style={{ "--panel-bg": climax ? "var(--color-straw)" : "var(--color-paper)" } as React.CSSProperties}
         >
           <ArrivalFx gear={c.gear} />
-          {artSrc && (
-            <LuffyRig
-              src={artSrc}
-              prev={c.gear > 1 ? luffySrc((c.gear - 1) as Chapter["gear"], "bw") : null}
-              enter="gearup"
-              label={`Fan art: a cartoon pirate transforming into Gear ${c.gear}`}
-              className="pointer-events-none absolute top-[4%] right-[2%] aspect-[3/4] h-[46%] md:top-auto md:right-[1%] md:bottom-[calc(var(--cut)+6px)] md:h-[80%]"
-            >
-              <LuffyArt gear={c.gear} mode="bw" alt="" className="size-full object-contain" />
-            </LuffyRig>
-          )}
           <div aria-hidden className="pointer-events-none absolute inset-[3px] overflow-hidden">
             <div
               data-lines
@@ -165,15 +133,15 @@ export function ChapterSpread({ chapter: c, projects, luffy = false }: { chapter
               aria-hidden
               data-sfx
               className={cn(
-                cn("pointer-events-none absolute flex items-start gap-2", art ? "top-[3%]" : "top-[7%]"),
-                art ? "left-[5%] -rotate-[6deg]" : flip ? "right-[6%] -rotate-[7deg]" : "right-[5%] rotate-[8deg]",
+                "pointer-events-none absolute top-[7%] flex items-start gap-2",
+                flip ? "right-[6%] -rotate-[7deg]" : "right-[5%] rotate-[8deg]",
               )}
             >
               <div className="flex flex-col items-end gap-1">
                 {c.sfx.map((s) => (
                   <span
                     key={s.text}
-                    className={cn("sfx block", art ? "text-[clamp(3.2rem,8vw,6.2rem)]" : "text-[clamp(3.6rem,10vw,7.5rem)]")}
+                    className="sfx block text-[clamp(3.6rem,10vw,7.5rem)]"
                     style={{ "--sfx-fill": c.gear >= 3 ? "var(--color-jolly)" : climax ? "var(--color-jolly)" : "var(--color-paper)" } as React.CSSProperties}
                   >
                     {s.text}
@@ -199,7 +167,6 @@ export function ChapterSpread({ chapter: c, projects, luffy = false }: { chapter
             title={c.title}
             label={`${c.subtitle}, ${c.period}`}
             className="relative"
-            compact={art}
           />
           <p data-landfall className="relative mt-4 inline-flex items-center gap-2 self-start border-2 border-ink bg-paper px-2.5 py-1 text-sm font-bold">
             <svg aria-hidden viewBox="0 0 16 16" className="size-4">
@@ -254,13 +221,6 @@ export function ChapterSpread({ chapter: c, projects, luffy = false }: { chapter
               </div>
             )}
           </>
-        )}
-
-        {pistol && (
-          <div className="panel col-span-12 overflow-visible p-0" style={{ "--panel-bg": "var(--color-paper)" } as React.CSSProperties}>
-            <div aria-hidden className="speedlines pointer-events-none absolute inset-0 opacity-10" style={{ "--sx": "20%", "--sy": "45%" } as React.CSSProperties} />
-            <PistolArm src={pistol} />
-          </div>
         )}
 
         {c.products && (
