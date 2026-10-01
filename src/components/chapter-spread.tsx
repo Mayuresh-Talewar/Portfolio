@@ -77,7 +77,7 @@ export function ChapterSpread({ chapter: c, projects, luffy = false }: { chapter
         <GearFive>
           {luffy && (
             // Art panel inside the splash: G4 (ink) is swapped for G5 (color) under the white flash.
-            <div className="absolute top-[5%] left-1/2 aspect-[3/4] h-[52%] -translate-x-1/2 -rotate-2 overflow-hidden border-[4px] border-ink bg-paper shadow-[8px_8px_0_var(--color-ink)] md:top-[6%] md:h-[58%]">
+            <div className="absolute top-[5%] left-1/2 aspect-[3/4] h-[44%] -translate-x-1/2 -rotate-2 overflow-hidden border-[4px] border-ink bg-paper shadow-[8px_8px_0_var(--color-ink)] md:top-[4%] md:h-[46%]">
               <LuffyArt gear={4} mode="bw" alt="" data-art="prev" className="absolute inset-0 size-full object-contain" />
               <LuffyArt
                 gear={5}
