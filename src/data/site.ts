@@ -4,7 +4,7 @@ export const siteConfig: SiteConfig = {
   name: "Mayuresh Talewar",
   title: "Full Stack Engineer (AI/LLM)",
   description:
-    "Full Stack Engineer building production web apps and GenAI products: AI agents, RAG pipelines and LLM integrations with React.js, Next.js, Node.js and FastAPI.",
+    "Full Stack Engineer (AI/LLM) in Pune, India, building production web apps and GenAI products: AI agents, RAG pipelines and LLM integrations with React.js, Next.js, Node.js and FastAPI.",
   location: "Pune, Maharashtra, India",
   email: "mtalewar2002@gmail.com",
   // TODO: swap for the custom domain once it exists.
