@@ -15,7 +15,7 @@ export type Stat = { value: string; label: string };
 /** Print mode per section (design spec §1), rendered as `data-mode` on `<section>`. */
 export type ColorMode = "bw" | "duo" | "color" | "night";
 
-/** Guide character pose ids (design spec §9); files live in public/guide/<id>.svg. */
+/** Guide character pose ids (design spec §9); files live in public/guide/<id>.webp (dormant until Sprint 5). */
 export type PoseId =
   | "01-wave-hello"
   | "02-break-out"
