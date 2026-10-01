@@ -208,7 +208,7 @@ export const parts = {
     guide: { pose: "06-wave-bye", line: "To be continued… the next chapter is written with you." },
     toBeContinued: "To be continued… The next arc needs an island.",
     cta: {
-      heading: "Looking for your next crewmate?",
+      heading: "Is your team the next island on my route?",
       body: "Building with AI or full stack? Let's set sail together.",
       label: "Send me a message",
     },
