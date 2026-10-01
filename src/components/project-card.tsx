@@ -24,11 +24,16 @@ export function ProjectCard({ project, index = 0 }: { project: Project; index?: 
           alt={`Screenshot of the ${project.title} website`}
           fill
           sizes={spread ? "(min-width: 768px) 60vw, 100vw" : "(min-width: 768px) 50vw, 100vw"}
-          className="object-cover object-top mix-blend-multiply contrast-125 grayscale transition-[filter] duration-500 group-focus-within:mix-blend-normal group-focus-within:grayscale-0 group-hover:mix-blend-normal group-hover:grayscale-0"
+          className="object-cover object-top mix-blend-multiply contrast-125 grayscale transition-[filter,scale] duration-500 ease-snap group-focus-within:mix-blend-normal group-hover:scale-[1.04] group-focus-within:grayscale-0 group-hover:mix-blend-normal group-hover:grayscale-0"
         />
         <div aria-hidden className="tone pointer-events-none absolute inset-0 opacity-25 transition-opacity duration-500 group-hover:opacity-0" />
       </div>
-      <div className={cn("flex flex-1 flex-col gap-3 p-5 pb-10 md:p-6 md:pb-12", spread && "md:col-span-5 md:justify-center md:pb-14")}>
+      <div className={cn("relative isolate flex flex-1 flex-col gap-3 p-5 pb-10 md:p-6 md:pb-12", spread && "md:col-span-5 md:justify-center md:pb-14")}>
+        <div
+          aria-hidden
+          className="speedlines pointer-events-none absolute inset-0 -z-10 opacity-0 transition-opacity duration-500 group-hover:opacity-[0.14]"
+          style={{ "--sx": "20%", "--sy": "12%" } as React.CSSProperties}
+        />
         {spread && <p className="ribbon self-start text-xs">Lead story</p>}
         <h3 className={cn("font-display uppercase", spread ? "text-3xl md:text-[2.6rem]" : "text-2xl", "leading-[1.02]")}>
           {project.title}

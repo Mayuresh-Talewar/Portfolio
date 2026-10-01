@@ -22,6 +22,7 @@ export function ChapterNav({
   maxGear?: number;
 }) {
   const [active, setActive] = useState(items[0]?.id);
+  const [open, setOpen] = useState(false);
   const root = useRef<HTMLElement>(null);
   const route = useRef<SVGPathElement>(null);
   const ship = useRef<HTMLDivElement>(null);
@@ -101,16 +102,40 @@ export function ChapterNav({
     <header
       ref={root}
       data-gear={gear}
+      onKeyDown={(e) => e.key === "Escape" && setOpen(false)}
       className="sticky top-0 z-40 border-b-[3px] border-ink bg-paper transition-colors duration-500 data-[gear='5']:bg-parchment"
     >
-      <div className="mx-auto grid max-w-[1400px] grid-cols-[1fr_auto_auto] items-center gap-x-3 px-3 md:grid-cols-[auto_minmax(0,1fr)_auto_auto] md:gap-x-6 md:px-6">
-        <a href="#cover" className="py-2 font-display text-[0.95rem] leading-none whitespace-nowrap md:text-xl">
+      <div className="relative mx-auto grid max-w-[1400px] grid-cols-[auto_1fr_auto_auto] items-center gap-x-2.5 bg-inherit px-3 md:grid-cols-[auto_minmax(0,1fr)_auto_auto] md:gap-x-6 md:px-6">
+        <a href="#cover" className="py-2 font-display text-[0.85rem] leading-none whitespace-nowrap md:text-xl">
           M<span className="text-jolly-ink">.</span>TALEWAR
         </a>
 
+        {/* Mobile: one row. The chart folds into a sheet under this toggle; it stays laid out (invisible) so the ship's path measures. */}
+        <button
+          type="button"
+          aria-expanded={open}
+          aria-controls="chapter-chart"
+          onClick={() => setOpen((o) => !o)}
+          className="flex h-11 items-center gap-1.5 justify-self-start md:hidden"
+        >
+          <span className="sr-only">Chapters, now reading {activeLabel}</span>
+          <span
+            aria-hidden
+            className="grid h-7 min-w-7 place-items-center border-2 border-ink bg-jolly px-1 font-display text-[0.7rem] leading-none text-paper"
+            style={{ borderRadius: "46% 54% 42% 58% / 55% 45% 55% 45%" }}
+          >
+            {items[idx]?.short}
+          </span>
+          <span aria-hidden className={`nav-caret transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
+        </button>
+
         <nav
+          id="chapter-chart"
           aria-label="Chapters"
-          className="relative col-span-3 row-start-2 -mx-3 h-12 border-t-2 border-ink/15 px-1 md:col-span-1 md:col-start-2 md:row-start-1 md:mx-0 md:h-14 md:border-0 md:px-0"
+          onClick={(e) => (e.target as Element).closest("a") && setOpen(false)}
+          className={`relative h-14 max-md:absolute max-md:inset-x-0 max-md:top-[calc(100%+3px)] max-md:border-b-[3px] max-md:border-ink max-md:bg-inherit max-md:px-2 max-md:transition-[opacity,translate,visibility] max-md:duration-200 md:col-start-2 md:row-start-1 ${
+            open ? "" : "max-md:invisible max-md:-translate-y-2 max-md:opacity-0"
+          }`}
         >
           <svg
             aria-hidden
@@ -173,7 +198,7 @@ export function ChapterNav({
             {Array.from({ length: maxGear }, (_, n) => (
               <span
                 key={n}
-                className="w-2 transition-colors duration-300 md:w-2.5"
+                className="w-1.5 transition-colors duration-300 md:w-2.5"
                 style={{ background: n < gear ? PIP[n + 1] : "rgb(26 22 18 / 0.12)" }}
               />
             ))}
@@ -183,7 +208,7 @@ export function ChapterNav({
           </span>
         </div>
 
-        <a href={resume} download className="btn btn-straw btn-sm px-3! md:col-start-4 md:px-[0.9rem]!">
+        <a href={resume} download className="btn btn-straw btn-sm px-2.5! text-[0.78rem]! md:col-start-4 md:px-[0.9rem]! md:text-[0.85rem]!">
           Resume
         </a>
       </div>
@@ -195,7 +220,7 @@ export function ChapterNav({
 }
 
 /** Our own little sloop (no Jolly Roger, no straw hat). */
-function ShipMark() {
+export function ShipMark() {
   return (
     <svg viewBox="0 0 32 28" className="block h-auto w-full drop-shadow-[2px_2px_0_rgba(26,22,18,0.25)]">
       <path d="M16 2v19" stroke="#1a1612" strokeWidth="2" />

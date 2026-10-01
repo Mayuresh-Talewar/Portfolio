@@ -361,3 +361,153 @@ section[data-mode] {
     --cut: 1.25rem;
   }
 }
+
+/* DEV-D ---------- Micro-interactions, living backgrounds, compact mobile nav (docs/11 #4 #8 #10) ----------
+   In the components layer so utilities still win; keyframes and the offscreen pause live outside it. */
+@layer components {
+  .nav-caret {
+    width: 0.7rem;
+    height: 0.45rem;
+    background: var(--color-ink);
+    clip-path: polygon(0 0, 100% 0, 50% 100%);
+  }
+
+  /* Buttons: a fill wipes in from the left on hover; :active stamps the button flat onto the page. */
+  .btn {
+    position: relative;
+    isolation: isolate;
+  }
+  .btn::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    background: var(--btn-wipe, var(--color-paper));
+    clip-path: inset(0 100% 0 0);
+    transition: clip-path 260ms var(--ease-snap);
+  }
+  .btn-ink {
+    --btn-wipe: var(--color-jolly);
+  }
+  .btn:active,
+  .btn:hover:active {
+    transform: translate(5px, 5px) scale(0.98);
+    box-shadow: 0 0 0 var(--color-ink);
+    transition-duration: 60ms;
+  }
+
+  /* Project cards: the wrapper carries the ink shadow (the .cut clip-path would eat a box-shadow). */
+  .gaiden-card {
+    filter: drop-shadow(4px 4px 0 var(--color-ink));
+    transition:
+      translate 260ms var(--ease-snap),
+      filter 260ms var(--ease-snap);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .btn:hover::before {
+      clip-path: inset(0);
+    }
+    .gaiden-card:hover,
+    .gaiden-card:focus-within {
+      translate: -3px -3px;
+      filter: drop-shadow(8px 8px 0 var(--color-ink));
+    }
+    /* Pointer spotlight: a straw glow under the cursor (--mx/--my set by motion/ambient.tsx). Instant on, no transition
+       on purpose: transitioning a registered custom prop here would override every panel's own transition list. */
+    :is(.panel, .cut):hover {
+      --spot-glow: radial-gradient(15rem circle at var(--mx, -50rem) var(--my, -50rem), rgb(246 194 51 / 0.3), transparent 70%);
+    }
+    .panel:hover,
+    .cut:hover::after {
+      background-image: var(--spot-glow);
+    }
+  }
+
+  /* Living backgrounds: transform-only loops. */
+  .rays-spin {
+    position: absolute;
+    width: max(180vmax, 1800px);
+    aspect-ratio: 1;
+    translate: -50% -50%;
+  }
+  .sea-drift {
+    transform-box: fill-box;
+  }
+  .ship-sail {
+    transform: translateX(62vw);
+  }
+
+  /* Finale end card ([data-cue] armed -> go by motion/ambient.tsx; no JS / reduced motion = final frame). */
+  .tbc-wipe {
+    transition: clip-path 700ms cubic-bezier(0.7, 0, 0.2, 1);
+  }
+  .tbc-don {
+    transition:
+      scale 450ms cubic-bezier(0.3, 1.9, 0.5, 1) 650ms,
+      opacity 80ms 650ms;
+  }
+  .tbc-end {
+    transition:
+      opacity 400ms 1100ms,
+      translate 400ms var(--ease-snap) 1100ms;
+  }
+  [data-cue="armed"] .tbc-wipe {
+    clip-path: inset(0 100% 0 0);
+  }
+  [data-cue="armed"] .tbc-don {
+    scale: 0;
+    opacity: 0;
+  }
+  [data-cue="armed"] .tbc-end {
+    opacity: 0;
+    translate: 0 12px;
+  }
+}
+
+@keyframes rays-turn {
+  to {
+    rotate: 360deg;
+  }
+}
+@keyframes sea-drift {
+  to {
+    transform: translateX(-50%);
+  }
+}
+@keyframes ship-sail {
+  from {
+    transform: translateX(-6rem);
+  }
+  to {
+    transform: translateX(calc(100vw + 2rem));
+  }
+}
+@keyframes ship-bob {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-4deg);
+  }
+  50% {
+    transform: translateY(-4px) rotate(4deg);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .rays-spin {
+    animation: rays-turn 240s linear infinite;
+  }
+  .sea-drift {
+    animation: sea-drift 9s linear infinite;
+  }
+  .ship-sail {
+    animation: ship-sail 42s linear infinite;
+  }
+  .ship-bob {
+    animation: ship-bob 2.6s ease-in-out infinite;
+  }
+}
+[data-live][data-paused],
+[data-live][data-paused] * {
+  animation-play-state: paused !important;
+}
+/* /DEV-D */
