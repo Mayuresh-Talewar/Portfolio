@@ -89,3 +89,44 @@ art; Luffy only behind `siteConfig.features.luffy`, credit in footer + cover, ro
   stay clipped); bursts `[data-burst]` scale 0 + -8deg to EASE.impact. clip-path is not a transform, so tilt utilities are safe.
 - CDP capture for pins: scroll to the pin-spacer's top minus the nav, then step `frac * pinDistance`; a fixed sleep after each
   scroll (scrub 0.5) is enough. Worktrees have no node_modules and Turbopack rejects a junction to the main one: `npm ci`.
+
+### DEV-D (micro-interactions, living backgrounds, mobile, docs/11 #4 #8 #10)
+- One render-less client leaf (`motion/ambient.tsx`) runs the whole ambient layer: pointer `--mx/--my` on `.panel/.cut`
+  (fine pointers only), `[data-live]` loops paused offscreen via IO (`data-paused`), `[data-cue]` one-shot entrances
+  (armed on mount, `go` on first view). Markup and CSS stay server-side; no JS / reduced motion = final frame.
+- Spotlight on `.cut` paints on `::after` (`background-image` only, the fill color stays). Never transition a registered
+  custom prop on `.panel/.cut`: one unlayered `transition:` would wipe every panel's utility transitions. Put DEV CSS in
+  `@layer components` so utilities still win; only keyframes + the offscreen pause go unlayered.
+- `.cut` panels clip their own box-shadow: put the ink shadow + lift on the wrapper as `filter: drop-shadow()` + `translate`.
+- Button wipe = `::before` with `clip-path: inset(0 100% 0 0)` -> `inset(0)` under `isolation: isolate`. Don't add
+  `overflow: hidden` to `.btn`: squeezed nav buttons then clip their label instead of overflowing visibly.
+- Rotating rays: an oversized square (`max(180vmax,1800px)`) centred on the ray origin with `translate:-50% -50%` + `rotate`
+  keyframes (separate properties, no transform fights). Sea drift: tile the swell path to 2x width (period divides 1440, dash
+  period too) and `translateX(-50%)` with `transform-box: fill-box`. Utility `[animation-duration:x]` loses to an unlayered
+  `animation` shorthand: use an inline style.
+- Mobile nav = one row (logo, current-pip toggle, Gear gauge, Resume; 47px). The chart folds into an absolute sheet that stays
+  laid out (`invisible`, not `display:none`) so MotionPath can still measure the route. Row budget at 390: logo 0.85rem,
+  gauge segments w-1.5, Resume 0.78rem; measure children widths, the grid squeezes the last auto column first.
+- Mobile length 18.9k -> 15.6k px: Section `py-10` + `scroll-mt-16`, contents islands and Gaiden cards as snap-x swipe rows
+  (Gaiden 3.3k -> 1.0k). Headless `--window-size=390` renders wider than 390: use CDP `setDeviceMetricsOverride` for phones.
+- Don't print the finale title again on the end card: the arrow says "Next arc", ribbon "End of Vol. 1".
+
+
+### DEV-C (Ch.5 bento numerals, chapter layout variants, Status Window, docs/11 #3 #6 #9)
+- Layouts: `chapter.layout` = classic | splash | tiers | versus, read inside ONE `ChapterSpread` via class maps (TITLE /
+  NARRATION / RECORD). Ch.1 splash (no box, rays as the Section backdrop masked to fade, record overlaps the title at -mt-44),
+  Ch.2 tiers (12-col spans 6/3/3 = 2fr/1fr/1fr, stair-stepped by md:mt-12/mt-24 under default stretch; record tier = ink panel,
+  override `--spot`/`--spot-text` to paper on it), Ch.3 versus, Ch.4/5 classic. Keep `[data-arrival]` + its data-* children in
+  every variant: ArrivalFx finds them by `closest()`. Don't `col-span-12` children of a non-12 grid (implicit tracks).
+- Shared slash (versus): left `polygon(0 0,100% 0,calc(100% - S) 100%,0 100%)`, right `polygon(S 0,...)`, equal heights via
+  grid stretch, right panel `margin-left: -(S + gap - 14px)` so slants run parallel. Mobile: cut-a over cut-b with
+  `margin-top: -var(--cut)` nests on the same slant. Unlayered DEV-C CSS beats Tailwind utilities (margins/padding).
+- Bento numeral: tile metric (`Product.metric`, resume figures only) bottom-right, `mt-auto`, Dela clamp(3rem,6vw,5.5rem),
+  stroke .04em ink + paint-order + 0.05em ink shadow; fill = the tile's contrast colour (jolly on straw/paper, straw on
+  jolly/sea). Label beside it at ~20ch or it hyphen-wraps into 3 lines. Tone corner = `-z-10` child inside the isolated panel.
+- Status Window: 3 signatures (skills.ts `signatures`) as straw Dela words with a left straw rule + one proof line; every resume
+  group stays, as a status line (sfx label + count, slash-separated inline list), no chip boxes. Put the separator in
+  `li:not(:last-child)::after { content: "\00a0/ " }` or slashes start lines. Row type-on = CSS `animation-timeline: view()`
+  under no-preference + @supports, so no JS and reduced motion get the static rows.
+- Mobile bursts: two `w-40` bursts need >= 320px of content width; panel padding `px-3` at 390 or they stack.
+- Worktrees: a junctioned node_modules fails Turbopack ("points out of the filesystem root"); `npm ci --prefer-offline` (~50s).
