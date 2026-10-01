@@ -63,7 +63,7 @@ export default function Home() {
           backdrop={<CoverArt />}
         >
           <div className="grid items-center gap-x-8 gap-y-12 md:grid-cols-12">
-            <div className="md:col-span-7">
+            <div className="md:col-span-6">
               <p className="flex items-center gap-3">
                 <span className="grid size-14 place-items-center rounded-full border-[3px] border-ink bg-jolly font-display text-[0.7rem] leading-[0.95] text-paper text-center">
                   VOL
@@ -104,9 +104,14 @@ export default function Home() {
                 </a>
               </div>
             </div>
-            <div className="relative md:col-span-5">
-              <div className="relative z-10 rotate-[2.5deg]">
-                <div data-intro="poster">
+            {/* The hero visual: the poster hangs from a nail by a rope (static tilt on the wrapper, intro swings the inner node). */}
+            <div className="relative pt-10 md:col-span-6 md:pt-6">
+              <div className="relative z-10 rotate-[2.5deg] drop-shadow-[14px_18px_0_rgb(26_22_18/0.25)]">
+                <div data-intro="poster" className="relative mx-auto max-w-[23rem] md:max-w-[29rem] [&_[data-poster]]:max-w-none">
+                  <svg aria-hidden viewBox="0 0 100 20" preserveAspectRatio="none" className="absolute inset-x-[14%] -top-9 h-10 w-[72%] overflow-visible">
+                    <path d="M0 20 L50 1 L100 20" fill="none" stroke="#7a5524" strokeWidth="3" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+                  </svg>
+                  <span aria-hidden className="absolute -top-[2.6rem] left-1/2 z-10 size-4 -translate-x-1/2 rounded-full border-2 border-ink bg-ink shadow-[inset_-2px_-2px_0_#6b5a40]" />
                   <WantedPoster name={siteConfig.name} wanted={cover.wanted} stats={stats} />
                 </div>
               </div>
