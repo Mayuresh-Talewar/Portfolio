@@ -129,7 +129,6 @@ export const chapters: Chapter[] = [
           "Created a Material Management System for the full procurement lifecycle, from purchase order (PO) creation and approval to warehouse stock-in, with AI-assisted document drafting and automated approval routing, lowering manual processing time by ~40%.",
       },
     ],
-    metrics: stats,
   },
 ];
 

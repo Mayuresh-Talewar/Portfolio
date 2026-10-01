@@ -10,7 +10,6 @@ export const siteConfig: SiteConfig = {
   // TODO: swap for the custom domain once it exists.
   url: "https://portfolio-delta-rouge-21.vercel.app",
   resume: "/resume.pdf",
-  image: "/images/portrait.webp",
   socials: [
     { label: "GitHub", href: "https://github.com/Mayuresh-Talewar" },
     { label: "LinkedIn", href: "https://www.linkedin.com/in/mayuresh-talewar-06242223a" },

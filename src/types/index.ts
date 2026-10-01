@@ -6,7 +6,6 @@ export type SiteConfig = {
   email: string;
   url: string;
   resume: string;
-  image: string;
   socials: { label: string; href: string }[];
   /** Feature flags; Luffy (fan-art guide) components render only when true. */
   features: { luffy: boolean };

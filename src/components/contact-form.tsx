@@ -47,7 +47,7 @@ export function ContactForm({ email }: { email: string }) {
     if (firstInvalid) return (form.elements.namedItem(firstInvalid.name) as HTMLElement).focus();
 
     // Honeypot: bots fill the hidden field; pretend success and send nothing.
-    if (data.get("company")) return setStatus("sent");
+    if (data.get("hp_field_x")) return setStatus("sent");
 
     setStatus("sending");
     try {
@@ -106,7 +106,7 @@ export function ContactForm({ email }: { email: string }) {
       })}
       <div aria-hidden className="absolute -left-[9999px]">
         <label>
-          Company <input name="company" tabIndex={-1} autoComplete="off" />
+          Leave blank <input name="hp_field_x" tabIndex={-1} autoComplete="off" />
         </label>
       </div>
       <button
