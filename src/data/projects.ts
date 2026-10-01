@@ -5,18 +5,19 @@ export const projects: Project[] = [
   {
     id: "shadow-monarch",
     title: "Shadow Monarch - AI Code Review Tool",
-    description:
+    summary:
       "LLM-powered code review tool on the OpenAI API that returns actionable suggestions in under 2 seconds as syntax-highlighted, diff-style changes, with Express.js rate limiting to prevent API overuse.",
-    tech: ["React.js", "Node.js", "Express.js", "OpenAI API", "MongoDB"],
+    stack: ["React.js", "Node.js", "Express.js", "OpenAI API", "MongoDB"],
     href: "https://shadow-monarchs-code-review-frontend.onrender.com/",
     image: "/projects/shadow-monarch.webp",
+    spread: true,
   },
   {
     id: "techagri",
     title: "TechAgri - B2B Agricultural Marketplace",
-    description:
+    summary:
       "Full-stack MERN marketplace connecting farmers with Common Service Centers across 3 user roles, with Razorpay payments and Fast2SMS OTP auth; deployed on Hostinger with SSL and 99%+ uptime.",
-    tech: ["React.js", "Node.js", "Express.js", "MongoDB", "Razorpay", "Fast2SMS"],
+    stack: ["React.js", "Node.js", "Express.js", "MongoDB", "Razorpay", "Fast2SMS"],
     href: "https://technologyagriculturecreater.com/",
     image: "/projects/techagri.webp",
     chapterId: "first-quest",
@@ -24,9 +25,9 @@ export const projects: Project[] = [
   {
     id: "sk-film",
     title: "SK Film Production",
-    description:
+    summary:
       "Client website with EmailJS contact forms and Google Maps, tuned with lazy loading, memoization and image optimization; client inquiries increased by 60%.",
-    tech: ["React.js", "EmailJS", "Google Maps API"],
+    stack: ["React.js", "EmailJS", "Google Maps API"],
     href: "https://www.skfilmproductions.co.uk/",
     image: "/projects/sk-film.webp",
     chapterId: "forging-the-blade",
@@ -34,18 +35,18 @@ export const projects: Project[] = [
   {
     id: "urhan-treaders",
     title: "Urhan Treaders",
-    description:
+    summary:
       "Business website for an import-export trading company, presenting its products, services and export destinations.",
-    tech: ["React.js", "Vite", "Material Tailwind"],
+    stack: ["React.js", "Vite", "Material Tailwind"],
     href: "https://import-export-mayuresh.netlify.app/",
     image: "/projects/urhan-treaders.webp",
   },
   {
     id: "robomeet",
     title: "RoboMeet",
-    description:
+    summary:
       "Landing page for a virtual office product for remote teams, showcasing one-click audio calls, avatars and video/screen sharing.",
-    tech: ["HTML5", "CSS3", "JavaScript"],
+    stack: ["HTML5", "CSS3", "JavaScript"],
     href: "https://superlative-mayuresh-robomeet.netlify.app/",
     image: "/projects/robomeet.webp",
   },

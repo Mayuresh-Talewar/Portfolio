@@ -12,32 +12,63 @@ export type SiteConfig = {
 
 export type Stat = { value: string; label: string };
 
-export type Chapter = {
+/** Print mode per section (design spec §1), rendered as `data-mode` on `<section>`. */
+export type ColorMode = "bw" | "duo" | "color" | "night";
+
+/** Guide character pose ids (design spec §9); files live in public/guide/<id>.svg. */
+export type PoseId =
+  | "01-wave-hello"
+  | "02-break-out"
+  | "03-walk"
+  | "04-point"
+  | "05-think"
+  | "06-wave-bye"
+  | "07-bust";
+
+export type Guide = {
+  pose: PoseId;
+  line: string;
+  /** Pose shown while entering, before `pose` (e.g. walk → point). */
+  enterPose?: PoseId;
+};
+
+/** A non-chapter part of the volume (cover, Gaiden, Status Window, Finale). */
+export type Part = {
   id: string;
-  number: number;
   title: string;
+  colorMode: ColorMode;
+  guide: Guide;
+};
+
+export type Product = { title: string; description: string };
+
+export type Chapter = Part & {
+  number: number;
   /** Plain label shown next to the flavor title, e.g. "Frontend Developer, Softtronix". */
   subtitle: string;
   period: string;
-  colorMode: "bw" | "color";
   role: string;
   org: string;
   location: string;
   highlights: string[];
   metrics?: Stat[];
+  /** Bento items (Ch.5 only). */
+  products?: Product[];
 };
 
 export type Project = {
   id: string;
   title: string;
-  description: string;
-  tech: string[];
+  summary: string;
+  stack: string[];
   href: string;
   image: string;
+  /** Rendered as a full-width color spread. */
+  spread?: boolean;
   chapterId?: Chapter["id"];
 };
 
 export type SkillGroup = {
-  category: string;
+  name: string;
   skills: string[];
 };

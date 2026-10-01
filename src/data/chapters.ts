@@ -1,4 +1,4 @@
-import type { Chapter, Stat } from "@/types";
+import type { Chapter, Part, Stat } from "@/types";
 
 // Headline impact stats (Crestline Intelligence, per the resume).
 export const stats: Stat[] = [
@@ -8,7 +8,7 @@ export const stats: Stat[] = [
   { value: "10k+", label: "docs with sub-second retrieval" },
 ];
 
-// Chronological, per R&D §7.1. colorMode default: only the current arc is in color.
+// Chronological, per R&D §7.1. colorMode + guide lines per design spec §1 / §6.
 export const chapters: Chapter[] = [
   {
     id: "the-beginning",
@@ -17,6 +17,7 @@ export const chapters: Chapter[] = [
     subtitle: "Diploma, Anjuman Polytechnic",
     period: "2018 – 2021",
     colorMode: "bw",
+    guide: { pose: "04-point", line: "Nagpur, 2018. A diploma and my first Hello World." },
     role: "Diploma in Computer Engineering",
     org: "Anjuman Polytechnic",
     location: "Nagpur, Maharashtra",
@@ -29,6 +30,7 @@ export const chapters: Chapter[] = [
     subtitle: "B.Tech CSE, G H Raisoni University",
     period: "2021 – 2024",
     colorMode: "bw",
+    guide: { pose: "05-think", line: "Four years of B.Tech. Lots of late-night builds." },
     role: "B.Tech in Computer Science Engineering",
     org: "G H Raisoni University",
     location: "Borgaon, Madhya Pradesh",
@@ -40,7 +42,8 @@ export const chapters: Chapter[] = [
     title: "First Quest",
     subtitle: "Full Stack Developer Intern, Technology World Creater",
     period: "Mar 2024 – Aug 2024",
-    colorMode: "bw",
+    colorMode: "duo",
+    guide: { pose: "04-point", line: "First real job. Production code hits different." },
     role: "Full Stack Developer Intern",
     org: "Technology World Creater Pvt. Ltd.",
     location: "Pune, Maharashtra",
@@ -62,7 +65,8 @@ export const chapters: Chapter[] = [
     title: "Forging the Blade",
     subtitle: "Frontend Developer, Softtronix",
     period: "Sep 2024 – Jul 2025",
-    colorMode: "bw",
+    colorMode: "duo",
+    guide: { pose: "04-point", line: "Softtronix is where my frontend got sharp." },
     role: "Frontend Developer",
     org: "Softtronix Software Solution Pvt. Ltd.",
     location: "Nagpur, Maharashtra",
@@ -84,17 +88,71 @@ export const chapters: Chapter[] = [
     subtitle: "Full Stack Developer, Crestline Intelligence",
     period: "Aug 2025 – Present",
     colorMode: "color",
+    guide: { pose: "04-point", enterPose: "03-walk", line: "And then the world got color. This is what I build now." },
     role: "Full Stack Developer",
     org: "Crestline Intelligence Pvt. Ltd.",
     location: "Pune, Maharashtra",
     highlights: [
-      "Built an AI Meeting Assistant: an organization-aware AI agent that joins live meetings, provides real-time guidance, auto-generates action items and recommends assignees using RAG over company knowledge, reducing post-meeting follow-up work by ~50%.",
-      "Engineered an agentic AI Smart Email platform with OAuth 2.0 inbox integration that classifies incoming mail by sender type (vendor vs. client) and drafts context-aware replies from past conversations, supporting manual, human-in-the-loop (AI draft-and-route) and fully autonomous modes; cut email handling time by ~45%.",
-      "Architected Retrieval-Augmented Generation (RAG) pipelines on PostgreSQL/pgvector (Supabase) with OpenAI and Google Gemini APIs, covering embeddings, semantic search and prompt orchestration, with sub-second retrieval across 10,000+ documents.",
-      "Created a Material Management System for the full procurement lifecycle, from purchase order (PO) creation and approval to warehouse stock-in, with AI-assisted document drafting and automated approval routing, lowering manual processing time by ~40%.",
       "Optimized API performance by designing REST APIs with Express.js and FastAPI and adding Redis caching, decreasing average API response time by ~35%; contributed to code reviews and production deployments.",
       "Shipped 3+ production web applications and 3+ business websites and maintain 2 live platforms; currently developing an AI-powered Project Management platform end-to-end (React.js, Next.js, Node.js, FastAPI, PostgreSQL).",
+    ],
+    // Bento items (design spec §6), resume wording.
+    products: [
+      {
+        title: "AI Meeting Assistant",
+        description:
+          "Built an AI Meeting Assistant: an organization-aware AI agent that joins live meetings, provides real-time guidance, auto-generates action items and recommends assignees using RAG over company knowledge, reducing post-meeting follow-up work by ~50%.",
+      },
+      {
+        title: "Smart Email",
+        description:
+          "Engineered an agentic AI Smart Email platform with OAuth 2.0 inbox integration that classifies incoming mail by sender type (vendor vs. client) and drafts context-aware replies from past conversations, supporting manual, human-in-the-loop (AI draft-and-route) and fully autonomous modes; cut email handling time by ~45%.",
+      },
+      {
+        title: "RAG Pipelines",
+        description:
+          "Architected Retrieval-Augmented Generation (RAG) pipelines on PostgreSQL/pgvector (Supabase) with OpenAI and Google Gemini APIs, covering embeddings, semantic search and prompt orchestration, with sub-second retrieval across 10,000+ documents.",
+      },
+      {
+        title: "Material Management System",
+        description:
+          "Created a Material Management System for the full procurement lifecycle, from purchase order (PO) creation and approval to warehouse stock-in, with AI-assisted document drafting and automated approval routing, lowering manual processing time by ~40%.",
+      },
     ],
     metrics: stats,
   },
 ];
+
+// Non-chapter parts of the volume (design spec §1 / §6).
+export const parts = {
+  cover: {
+    id: "cover",
+    title: "Vol. 1: Mayuresh Talewar",
+    colorMode: "color",
+    guide: { pose: "01-wave-hello", line: "Hello! I'm Mayuresh. This volume is my story so far." },
+  },
+  breakOut: {
+    id: "break-out",
+    title: "Break-out",
+    colorMode: "color",
+    guide: { pose: "02-break-out", line: "Mind if I step out of the panel?" },
+  },
+  gaiden: {
+    id: "gaiden",
+    title: "Side Stories",
+    colorMode: "color",
+    guide: { pose: "04-point", line: "Side stories. All live. Go poke them." },
+  },
+  status: {
+    id: "status-window",
+    title: "Status Window",
+    colorMode: "night",
+    guide: { pose: "05-think", line: "My stats. No fake percentages, just what I use." },
+  },
+  finale: {
+    id: "finale",
+    title: "To Be Continued...",
+    colorMode: "color",
+    guide: { pose: "06-wave-bye", line: "To be continued… the next chapter is written with you." },
+  },
+} satisfies Record<string, Part>;
