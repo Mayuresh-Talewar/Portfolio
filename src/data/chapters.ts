@@ -1,0 +1,100 @@
+import type { Chapter, Stat } from "@/types";
+
+// Headline impact stats (Crestline Intelligence, per the resume).
+export const stats: Stat[] = [
+  { value: "~50%", label: "less post-meeting follow-up work" },
+  { value: "~45%", label: "faster email handling" },
+  { value: "~35%", label: "faster average API response" },
+  { value: "10k+", label: "docs with sub-second retrieval" },
+];
+
+// Chronological, per R&D §7.1. colorMode default: only the current arc is in color.
+export const chapters: Chapter[] = [
+  {
+    id: "the-beginning",
+    number: 1,
+    title: "The Beginning",
+    subtitle: "Diploma, Anjuman Polytechnic",
+    period: "2018 – 2021",
+    colorMode: "bw",
+    role: "Diploma in Computer Engineering",
+    org: "Anjuman Polytechnic",
+    location: "Nagpur, Maharashtra",
+    highlights: ["Completed Mar 2021 with a score of 75%."],
+  },
+  {
+    id: "academy-arc",
+    number: 2,
+    title: "Academy Arc",
+    subtitle: "B.Tech CSE, G H Raisoni University",
+    period: "2021 – 2024",
+    colorMode: "bw",
+    role: "B.Tech in Computer Science Engineering",
+    org: "G H Raisoni University",
+    location: "Borgaon, Madhya Pradesh",
+    highlights: ["Graduated Mar 2024 with a CGPA of 7.89/10."],
+  },
+  {
+    id: "first-quest",
+    number: 3,
+    title: "First Quest",
+    subtitle: "Full Stack Developer Intern, Technology World Creater",
+    period: "Mar 2024 – Aug 2024",
+    colorMode: "bw",
+    role: "Full Stack Developer Intern",
+    org: "Technology World Creater Pvt. Ltd.",
+    location: "Pune, Maharashtra",
+    highlights: [
+      "Developed full-stack MERN (MongoDB, Express.js, React.js, Node.js) modules with reusable, modular components to speed up feature development, along with interactive React.js and Redux UI components that boosted user engagement and session time.",
+      "Implemented JWT authentication with role-based access control (RBAC), securing 15+ protected routes and backend services.",
+      "Designed and tested RESTful APIs with Node.js and Express.js for reliable frontend integration.",
+      "Automated billing and customer communication by integrating Razorpay payments and Twilio SMS/email notifications.",
+      "Guided 4 junior contributors on Git workflows and modular code while participating in Agile sprints and peer code reviews via GitHub Projects.",
+    ],
+    metrics: [
+      { value: "15+", label: "protected routes secured" },
+      { value: "4", label: "junior contributors guided" },
+    ],
+  },
+  {
+    id: "forging-the-blade",
+    number: 4,
+    title: "Forging the Blade",
+    subtitle: "Frontend Developer, Softtronix",
+    period: "Sep 2024 – Jul 2025",
+    colorMode: "bw",
+    role: "Frontend Developer",
+    org: "Softtronix Software Solution Pvt. Ltd.",
+    location: "Nagpur, Maharashtra",
+    highlights: [
+      "Crafted responsive, cross-browser web interfaces with React.js, TypeScript and Tailwind CSS for 4+ client projects.",
+      "Integrated 10+ REST API endpoints in collaboration with backend developers, ensuring reliable frontend–backend data flow.",
+      "Standardized reusable UI components and UI/UX patterns across projects; improved page load performance by ~25% through rendering and cross-browser optimizations.",
+      "Delivered the SK Film Production website with EmailJS contact forms and Google Maps API, using lazy loading, memoization and image optimization; client inquiries increased by 60%.",
+    ],
+    metrics: [
+      { value: "~25%", label: "faster page loads" },
+      { value: "60%", label: "more client inquiries (SK Film)" },
+    ],
+  },
+  {
+    id: "the-ai-arc",
+    number: 5,
+    title: "The AI Arc",
+    subtitle: "Full Stack Developer, Crestline Intelligence",
+    period: "Aug 2025 – Present",
+    colorMode: "color",
+    role: "Full Stack Developer",
+    org: "Crestline Intelligence Pvt. Ltd.",
+    location: "Pune, Maharashtra",
+    highlights: [
+      "Built an AI Meeting Assistant: an organization-aware AI agent that joins live meetings, provides real-time guidance, auto-generates action items and recommends assignees using RAG over company knowledge, reducing post-meeting follow-up work by ~50%.",
+      "Engineered an agentic AI Smart Email platform with OAuth 2.0 inbox integration that classifies incoming mail by sender type (vendor vs. client) and drafts context-aware replies from past conversations, supporting manual, human-in-the-loop (AI draft-and-route) and fully autonomous modes; cut email handling time by ~45%.",
+      "Architected Retrieval-Augmented Generation (RAG) pipelines on PostgreSQL/pgvector (Supabase) with OpenAI and Google Gemini APIs, covering embeddings, semantic search and prompt orchestration, with sub-second retrieval across 10,000+ documents.",
+      "Created a Material Management System for the full procurement lifecycle, from purchase order (PO) creation and approval to warehouse stock-in, with AI-assisted document drafting and automated approval routing, lowering manual processing time by ~40%.",
+      "Optimized API performance by designing REST APIs with Express.js and FastAPI and adding Redis caching, decreasing average API response time by ~35%; contributed to code reviews and production deployments.",
+      "Shipped 3+ production web applications and 3+ business websites and maintain 2 live platforms; currently developing an AI-powered Project Management platform end-to-end (React.js, Next.js, Node.js, FastAPI, PostgreSQL).",
+    ],
+    metrics: stats,
+  },
+];
