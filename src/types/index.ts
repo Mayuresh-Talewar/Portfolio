@@ -38,7 +38,8 @@ export type FinalePart = Part & {
 /** Manga sound effect: Latin text plus optional katakana. */
 export type Sfx = { text: string; kana?: string };
 
-export type Product = { title: string; description: string };
+/** Ch.5 bento tile. `metric` = the tile's hero numeral (resume figure only). */
+export type Product = { title: string; description: string; metric?: Stat };
 
 export type Chapter = Part & {
   number: number;
@@ -61,6 +62,9 @@ export type Chapter = Part & {
   location: string;
   highlights: string[];
   metrics?: Stat[];
+  /** Spread composition: splash = boxless title on rays, tiers = three vertical panels,
+   *  versus = title + stats panel sharing one slash, classic (default) = title panel + offset captions. */
+  layout?: "classic" | "splash" | "tiers" | "versus";
   /** Bento items (Ch.5 only). */
   products?: Product[];
 };
@@ -76,6 +80,9 @@ export type Project = {
   spread?: boolean;
   chapterId?: Chapter["id"];
 };
+
+/** Status Window headliner: a display word plus one line of proof from the resume. */
+export type SignatureSkill = { name: string; proof: string };
 
 export type SkillGroup = {
   name: string;

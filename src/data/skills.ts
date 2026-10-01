@@ -1,4 +1,11 @@
-import type { SkillGroup } from "@/types";
+import type { SignatureSkill, SkillGroup } from "@/types";
+
+// Status Window headliners. Proof lines are resume figures only.
+export const signatures: SignatureSkill[] = [
+  { name: "LLMs + RAG", proof: "RAG over 10,000+ docs with sub-second retrieval, plus agents that join live meetings." },
+  { name: "Full stack", proof: "3+ production apps shipped, React and Next.js through FastAPI to PostgreSQL." },
+  { name: "System design", proof: "REST APIs with Redis caching that cut average response time ~35%." },
+];
 
 // Grouped exactly as on the resume.
 export const skills: SkillGroup[] = [
