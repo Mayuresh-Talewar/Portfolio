@@ -36,8 +36,11 @@ export function ContactForm({ email }: { email: string }) {
     const next: Partial<Record<Field, string>> = {};
     for (const f of FIELDS) {
       const el = form.elements.namedItem(f.name) as HTMLInputElement | HTMLTextAreaElement;
-      el.value = el.value.trim();
+      // Don't write el.value back: a script-set value disables the browser's minLength (tooShort) check.
+      const min = f.minLength ?? 1;
       if (!el.checkValidity()) next[f.name] = el.validationMessage;
+      else if (el.value.trim().length < min)
+        next[f.name] = min > 1 ? `Please enter at least ${min} characters.` : "Please fill out this field.";
     }
     setErrors(next);
     const firstInvalid = FIELDS.find((f) => next[f.name]);
