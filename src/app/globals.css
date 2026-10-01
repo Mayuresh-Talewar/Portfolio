@@ -341,17 +341,18 @@ section[data-mode] {
   visibility: hidden;
 }
 
-/* Cover: one orchestrated load moment, CSS only. */
-@keyframes slam {
-  from {
-    opacity: 0;
-    transform: translateY(-0.25em) scale(1.35) rotate(-4deg);
+/* Entry intro overlay (motion/intro.tsx). No-JS safety net hides it at 1.5s; reduced motion never shows it. */
+@keyframes intro-failsafe {
+  to {
+    visibility: hidden;
   }
 }
-@media (prefers-reduced-motion: no-preference) {
-  .slam {
-    animation: slam 0.55s cubic-bezier(0.2, 1.4, 0.4, 1) both;
-    animation-delay: calc(var(--i, 0) * 110ms + 80ms);
+.intro {
+  animation: intro-failsafe 0s 1.5s forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .intro {
+    display: none;
   }
 }
 

@@ -8,7 +8,7 @@ import { ChapterSpread } from "@/components/chapter-spread";
 import { ContactForm } from "@/components/contact-form";
 import { GaidenStrip } from "@/components/motion/gaiden-strip";
 import { RouteDraw } from "@/components/motion/route-draw";
-import { WantedDrop } from "@/components/motion/wanted-drop";
+import { Intro } from "@/components/motion/intro";
 import { ProjectCard } from "@/components/project-card";
 import { Section } from "@/components/section";
 import { SiteFooter } from "@/components/site-footer";
@@ -47,6 +47,7 @@ export default function Home() {
       >
         Skip to contents
       </a>
+      <Intro />
       <ChapterNav items={contents} resume={siteConfig.resume} />
 
       <main className="flex-1">
@@ -69,24 +70,25 @@ export default function Home() {
                 </span>
               </p>
               <h1 id="cover-title" className="logotype mt-3 text-[12.2vw] md:text-[6.6vw] min-[1440px]:text-[6rem]">
-                <span className="slam block" style={{ "--i": 0 } as React.CSSProperties}>
+                <span data-intro="name" className="block">
                   Mayuresh
                 </span>
-                <span className="slam block pl-[0.5em]" style={{ "--i": 1 } as React.CSSProperties}>
+                <span data-intro="name" className="block pl-[0.5em]">
                   Talewar
                 </span>
               </h1>
               <p
-                className="slam ribbon mt-6 text-[1.05rem] md:mt-8 md:text-2xl"
-                style={{ "--i": 2, "--ribbon-bg": "var(--color-jolly)" } as React.CSSProperties}
+                data-intro="ribbon"
+                className="ribbon mt-6 text-[1.05rem] md:mt-8 md:text-2xl"
+                style={{ "--ribbon-bg": "var(--color-jolly)" } as React.CSSProperties}
               >
                 {siteConfig.title}
               </p>
-              <p className="mt-5 max-w-[34ch] font-letter text-lg leading-snug font-bold md:text-xl">{cover.tagline}</p>
-              <p className="mt-2 text-sm font-semibold md:text-base">
+              <p data-intro="copy" className="mt-5 max-w-[34ch] font-letter text-lg leading-snug font-bold md:text-xl">{cover.tagline}</p>
+              <p data-intro="copy" className="mt-2 text-sm font-semibold md:text-base">
                 Now: {current.role} at {current.org.replace(/ Pvt\. Ltd\.$/, "")}, {siteConfig.location.split(",")[0]}
               </p>
-              <div className="mt-7 flex flex-wrap gap-4">
+              <div data-intro="copy" className="mt-7 flex flex-wrap gap-4">
                 <a href={siteConfig.resume} download className="btn btn-straw">
                   Resume
                 </a>
@@ -97,9 +99,9 @@ export default function Home() {
             </div>
             <div className="relative md:col-span-5">
               <div className="relative z-10 rotate-[2.5deg]">
-                <WantedDrop>
+                <div data-intro="poster">
                   <WantedPoster name={siteConfig.name} wanted={cover.wanted} stats={stats} />
-                </WantedDrop>
+                </div>
               </div>
             </div>
           </div>
