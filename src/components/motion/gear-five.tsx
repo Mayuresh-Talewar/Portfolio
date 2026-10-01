@@ -2,6 +2,7 @@
 
 import { useRef, type ReactNode } from "react";
 import { gsap, MQ, SplitText, useGSAP } from "@/lib/gsap";
+import { EASE } from "@/lib/motion";
 
 const PUFFS = 10;
 
@@ -32,7 +33,7 @@ export function GearFive({ children }: { children: ReactNode }) {
             ? { trigger: el, start: "top 59px", end: "+=110%", pin: true, scrub: 0.5, anticipatePin: 1 }
             : { trigger: el, start: "top 60%", toggleActions: "play none none none" },
         });
-        tl.fromTo(".gear-prev", { autoAlpha: 1 }, { scaleY: 0, scaleX: 1.4, autoAlpha: 0, duration: 0.12, ease: "power2.in" }, 0.02)
+        tl.fromTo(".gear-prev", { autoAlpha: 1 }, { scaleY: 0, scaleX: 1.4, autoAlpha: 0, duration: 0.12, ease: EASE.exit }, 0.02)
           .fromTo(
             ".puff",
             { scale: 0, x: 0, y: 0, autoAlpha: 1 },
@@ -41,7 +42,7 @@ export function GearFive({ children }: { children: ReactNode }) {
               x: (i: number) => Math.cos((i / PUFFS) * Math.PI * 2) * 0.46 * innerWidth,
               y: (i: number) => Math.sin((i / PUFFS) * Math.PI * 2) * 0.4 * innerHeight,
               duration: 0.3,
-              ease: "power2.out",
+              ease: EASE.move,
             },
             0.1,
           )
@@ -51,8 +52,8 @@ export function GearFive({ children }: { children: ReactNode }) {
           .fromTo(".gear-stage", { scaleX: 1.3, scaleY: 0.75, skewX: -8 }, { scaleX: 1, scaleY: 1, skewX: 0, duration: 0.45, ease: "elastic.out(1.2, 0.3)" }, 0.42)
           .fromTo(".halftone", { autoAlpha: 0 }, { autoAlpha: 0.5, duration: 0.1 }, 0.42)
           .to(".halftone", { autoAlpha: 0, duration: 0.2 }, 0.62)
-          .from(call.chars, { yPercent: 120, scale: 0, autoAlpha: 0, stagger: 0.02, duration: 0.14, ease: "back.out(2.4)" }, 0.36)
-          .from(".gear-beat", { scale: 0, rotation: (i: number) => (i ? 25 : -25), autoAlpha: 0, stagger: 0.08, duration: 0.18, ease: "back.out(2.5)" }, 0.56)
+          .from(call.chars, { yPercent: 120, scale: 0, autoAlpha: 0, stagger: 0.02, duration: 0.14, ease: EASE.impact }, 0.36)
+          .from(".gear-beat", { scale: 0, rotation: (i: number) => (i ? 25 : -25), autoAlpha: 0, stagger: 0.08, duration: 0.18, ease: EASE.impact }, 0.56)
           .from(".gear-line", { autoAlpha: 0, y: 24, duration: 0.12 }, 0.66)
           .set({}, {}, 1);
         if (section) tl.fromTo(section, { "--flood": 0 }, { "--flood": 1, duration: 0.4 }, 0.46);

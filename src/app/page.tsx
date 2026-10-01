@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import { chapters, parts, stats } from "@/data/chapters";
 import { projects } from "@/data/projects";
 import { siteConfig } from "@/data/site";
@@ -6,6 +7,7 @@ import { ChapterHeader } from "@/components/chapter-header";
 import { ChapterNav, type NavItem } from "@/components/chapter-nav";
 import { ChapterSpread } from "@/components/chapter-spread";
 import { ContactForm } from "@/components/contact-form";
+import { Eyecatch } from "@/components/eyecatch";
 import { GaidenStrip } from "@/components/motion/gaiden-strip";
 import { RouteDraw } from "@/components/motion/route-draw";
 import { Intro } from "@/components/motion/intro";
@@ -154,8 +156,11 @@ export default function Home() {
         </nav>
 
         {/* ───────── CH.1–5 ───────── */}
-        {chapters.map((c) => (
-          <ChapterSpread key={c.id} chapter={c} projects={projects.filter((p) => p.chapterId === c.id)} />
+        {chapters.map((c, i) => (
+          <Fragment key={c.id}>
+            {i > 0 && <Eyecatch chapter={c} />}
+            <ChapterSpread chapter={c} projects={projects.filter((p) => p.chapterId === c.id)} />
+          </Fragment>
         ))}
 
         {/* ───────── GAIDEN ───────── */}

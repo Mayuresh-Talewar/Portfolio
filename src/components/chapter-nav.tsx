@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { gsap, ScrollTrigger, useGSAP } from "@/lib/gsap";
+import { EASE } from "@/lib/motion";
 
 export type NavItem = { id: string; label: string; short: string; gear?: number };
 
@@ -58,7 +59,7 @@ export function ChapterNav({
           const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
           const to = gsap.quickTo(pos, "p", {
             duration: reduce ? 0 : 0.7,
-            ease: "power3.out",
+            ease: EASE.move,
             onUpdate: () => {
               sail.progress(pos.p);
             },

@@ -361,3 +361,81 @@ section[data-mode] {
     --cut: 1.25rem;
   }
 }
+
+/* DEV-B ---------- Eyecatch (components/eyecatch.tsx): mid-episode card before Ch.2-4 ---------- */
+/* Final frame is the default (no-JS, reduced motion). B&W chapters wipe to paper, duo chapters to the red spot. */
+.eyecatch {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  height: 72svh;
+  background: var(--color-ink);
+  border-bottom: 3px solid var(--color-ink);
+  --ec-bg: var(--color-paper);
+  --ec-fill: var(--color-paper);
+}
+.eyecatch[data-mode="duo"] {
+  --ec-bg: var(--color-jolly);
+  --ec-fill: var(--color-straw);
+}
+@media (min-width: 768px) {
+  .eyecatch {
+    height: calc(100svh - 59px);
+  }
+}
+/* The ink-field beat before the wipe: a paper-outlined numeral. */
+.ec-num {
+  position: absolute;
+  font-family: var(--font-display);
+  font-size: clamp(16rem, 48vw, 40rem);
+  line-height: 1;
+  color: transparent;
+  -webkit-text-stroke: 4px var(--color-paper);
+}
+.ec-wipe {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: var(--ec-bg);
+  clip-path: circle(75% at 50% 50%);
+  /* the card's own panel frame, like a broadcast-safe border */
+  outline: 3px solid var(--color-ink);
+  outline-offset: -14px;
+}
+.ec-ghost {
+  position: absolute;
+  right: -0.04em;
+  bottom: -0.24em;
+  font-family: var(--font-display);
+  font-size: clamp(16rem, 44vw, 36rem);
+  line-height: 1;
+  color: transparent;
+  -webkit-text-stroke: 3px var(--color-ink);
+  opacity: 0.2;
+}
+.ec-ribbon {
+  --ribbon-bg: var(--color-ink);
+}
+.ec-call {
+  --sfx-fill: var(--ec-fill);
+  text-shadow: 0.05em 0.06em 0 var(--color-ink);
+}
+.ec-kana {
+  position: absolute;
+  top: 8%;
+  right: 6%;
+  font-size: clamp(2.2rem, 5vw, 4.2rem);
+  line-height: 1;
+}
+.ec-sfx {
+  position: absolute;
+  bottom: 9%;
+  left: 6%;
+  rotate: -9deg;
+  font-size: clamp(2.8rem, 7vw, 6rem);
+  --sfx-fill: var(--ec-fill);
+}
