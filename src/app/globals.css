@@ -22,6 +22,7 @@
   --font-sfx: var(--font-bangers), var(--font-dela), sans-serif;
   --font-letter: var(--font-comic), "Comic Sans MS", cursive;
   --font-sans: var(--font-archivo), system-ui, sans-serif;
+  --font-serif: var(--font-playfair), Georgia, serif;
 
   --ease-snap: cubic-bezier(0.2, 0.9, 0.1, 1);
 }

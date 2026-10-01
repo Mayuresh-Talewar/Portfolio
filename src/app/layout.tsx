@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Archivo, Bangers, Comic_Neue, Dela_Gothic_One } from "next/font/google";
+import { Archivo, Bangers, Comic_Neue, Dela_Gothic_One, Playfair_Display } from "next/font/google";
 import { seo } from "./seo";
 import "./globals.css";
 
@@ -8,6 +8,8 @@ const dela = Dela_Gothic_One({ variable: "--font-dela", weight: "400", subsets: 
 const bangers = Bangers({ variable: "--font-bangers", weight: "400", subsets: ["latin"] });
 const comic = Comic_Neue({ variable: "--font-comic", weight: ["400", "700"], subsets: ["latin"] });
 const archivo = Archivo({ variable: "--font-archivo", subsets: ["latin"], axes: ["wdth"] });
+// Wanted-poster serif (OFL).
+const playfair = Playfair_Display({ variable: "--font-playfair", subsets: ["latin"] });
 
 export const metadata: Metadata = {
   metadataBase: new URL(seo.url),
@@ -62,7 +64,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${dela.variable} ${bangers.variable} ${comic.variable} ${archivo.variable} h-full antialiased`}
+      className={`${dela.variable} ${bangers.variable} ${comic.variable} ${archivo.variable} ${playfair.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <script
