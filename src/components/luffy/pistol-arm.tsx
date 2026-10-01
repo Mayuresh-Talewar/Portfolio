@@ -51,20 +51,24 @@ export function PistolArm({ src }: { src: string }) {
       const [fx, fy] = pivotOf(fist, "413 512").split(" ").map(Number);
       const skin = src.includes("-bw") ? "#ffffff" : "#f6c9a0";
 
-      // A dedicated rubber arm: a tube (constant ink weight via non-scaling-stroke) that grows from the
+      // A dedicated rubber arm: a tube (its width attribute grows, so the ink weight never distorts) that grows from the
       // shoulder, plus a copy of the fist that is only TRANSLATED along it. The resting arm hides meanwhile;
       // the sleeve cap (arm-l-shoulder) stays on the shoulder.
       const NS = "http://www.w3.org/2000/svg";
       const rubber = document.createElementNS(NS, "g");
       rubber.style.visibility = "hidden"; // reduced motion: never shown
       const tube = document.createElementNS(NS, "rect");
-      for (const [k, v] of Object.entries({ x: sx, y: sy - 11, width: 100, height: 22, fill: skin, stroke: "#1a1612", "stroke-width": 3, "vector-effect": "non-scaling-stroke" }))
+      for (const [k, v] of Object.entries({ x: sx, y: sy - 9, width: 1, height: 18, fill: skin, stroke: "#1a1612", "stroke-width": 3, "vector-effect": "non-scaling-stroke" }))
         tube.setAttribute(k, String(v));
       const hand = fist.cloneNode(true) as SVGGElement;
       for (const n of [hand, ...hand.querySelectorAll("[id]")]) n.removeAttribute("id");
-      hand.removeAttribute("transform");
+      // Point the fist right with its wrist (pivot) on the tube start; `ride` slides it to the tube end.
+      hand.setAttribute("transform", `translate(${sx - fx} ${sy - fy}) rotate(-90 ${fx} ${fy}) translate(${fx} ${fy}) scale(1.5) translate(${-fx} ${-fy})`); // comic-big fist
       hand.style.transformOrigin = "";
-      rubber.append(tube, hand);
+      const ride = document.createElementNS(NS, "g");
+      ride.append(hand);
+      rubber.append(tube, ride);
+      const sync = () => ride.setAttribute("transform", `translate(${tube.getAttribute("width")} 0)`);
       host.insertBefore(rubber, arm.nextSibling);
 
       const mm = gsap.matchMedia();
@@ -73,9 +77,6 @@ export function PistolArm({ src }: { src: string }) {
         // SVG units the fist travels: ~half the viewport.
         const reach = () => (innerWidth * (desk ? 0.5 : 0.5)) / (art.getBoundingClientRect().height / 800);
         gsap.set(rubber, { autoAlpha: 0 });
-        gsap.set(tube, { scaleX: 0.01, svgOrigin: `${sx} ${sy}` });
-        // Fist points right, wrist (its pivot) on the tube's end.
-        gsap.set(hand, { svgOrigin: `${fx} ${fy}`, rotation: -90, x: sx - fx, y: sy - fy });
         const tl = gsap.timeline({
           defaults: { ease: "none" },
           scrollTrigger: desk
@@ -84,11 +85,9 @@ export function PistolArm({ src }: { src: string }) {
         });
         tl.set(upper, { autoAlpha: 0 }, 0.08)
           .set(rubber, { autoAlpha: 1 }, 0.08)
-          .to(tube, { scaleX: () => reach() / 100, duration: 0.42 }, 0.08)
-          .to(hand, { x: () => sx - fx + reach(), duration: 0.42 }, 0.08)
+          .to(tube, { attr: { width: () => reach() }, duration: 0.42, onUpdate: sync }, 0.08) // attr, not scale: exact ink weight
           .fromTo(el.querySelectorAll(".pistol-call"), { autoAlpha: 0, scale: 0.4 }, { autoAlpha: 1, scale: 1, duration: 0.1, ease: "back.out(2)" }, 0.45)
-          .to(tube, { scaleX: 0.01, duration: 0.1, ease: "power4.in" }, 0.85)
-          .to(hand, { x: sx - fx, duration: 0.1, ease: "power4.in" }, 0.85)
+          .to(tube, { attr: { width: 1 }, duration: 0.1, ease: "power4.in", onUpdate: sync }, 0.85)
           .set(rubber, { autoAlpha: 0 }, 0.95)
           .set(upper, { autoAlpha: 1 }, 0.95);
         ScrollTrigger.sort();

@@ -30,7 +30,7 @@ export function ProjectCard({ project, index = 0 }: { project: Project; index?: 
       </div>
       <div className={cn("flex flex-1 flex-col gap-3 p-5 pb-10 md:p-6 md:pb-12", spread && "md:col-span-5 md:justify-center md:pb-14")}>
         {spread && <p className="ribbon self-start text-xs">Lead story</p>}
-        <h3 className={cn("font-display leading-[1.02] uppercase", spread ? "text-3xl md:text-[2.6rem]" : "text-2xl")}>
+        <h3 className={cn("font-display uppercase", spread ? "text-3xl md:text-[2.6rem]" : "text-2xl", "leading-[1.02]")}>
           {project.title}
         </h3>
         <p className="max-w-[60ch] leading-relaxed">{project.summary}</p>

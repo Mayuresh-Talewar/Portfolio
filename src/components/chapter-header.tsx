@@ -28,8 +28,9 @@ export function ChapterHeader({
         id={id}
         data-title
         className={cn(
-          "mt-3 font-display leading-[0.92] tracking-[-0.01em] uppercase text-balance",
+          "mt-3 font-display tracking-[-0.01em] uppercase text-balance",
           compact ? "max-w-[9.5ch] text-[clamp(2.3rem,5vw,4.4rem)]" : "max-w-[13ch] text-[clamp(2.4rem,6.4vw,5.6rem)]",
+          "leading-[0.92]", // after the size: tailwind-merge drops an earlier leading-* when a text-* follows
         )}
       >
         {title}
