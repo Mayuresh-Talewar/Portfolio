@@ -67,7 +67,7 @@ export function WantedPoster({
             fill
             preload
             sizes="(min-width: 768px) 320px, 80vw"
-            className="scale-[1.08] object-cover object-[50%_14%] mix-blend-multiply contrast-[1.2] grayscale sepia-[0.7]"
+            className="scale-[1.3] object-cover object-[50%_14%] mix-blend-multiply contrast-[1.2] grayscale sepia-[0.7]"
           />
           <div aria-hidden className="tone pointer-events-none absolute inset-0 opacity-[0.22]" style={{ "--tone-ink": INK } as React.CSSProperties} />
         </div>
