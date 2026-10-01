@@ -77,6 +77,22 @@ clean ink, flat base colours, then a 2-tone cel shadow from one light source, a 
 - (G1 iter 8) The hat sat too high and showed a tall band of hair. Fix: lower the hat 7 and tilt it 3 degrees.
 - Remaining G1 gaps: brush-like line variation, hair strand rhythm, cardigan drape and fold design, knuckle detail.
 
+### ART-002 structural pass (the biggest wins came from structure, not tweaks)
+- Chibi read: the hat plus a 0.84 head scale gave about 1:4.5 at a glance. Fix: `HEAD_S` 0.67 (about 6.8 heads, crown to sole), torso
+  `SHOULDER_W` 1.1 and arms shifted out by `ARM_DX` 9. This did more than every face tweak combined.
+- Uniform strokes looked like a sticker. Fix: `ink()` samples every outline and emits a filled variable-width ring: thick
+  (3.4 units, about 7 px) where the normal faces away from the light, a hairline on the lit side. Head parts use `celh` (w 5.0)
+  because the head frame is scaled. Cloud and ribbon outlines are Q-scallops (no `A` arcs), so they can be sampled. Coarse step for clouds keeps the file under 150 KB.
+- Front-facing T-stance. Fix: a nested rig with poses as plain transforms in `GEARS`:
+  `arm-x` > `-upper` (shoulder) > `-forearm` (elbow) > `-fist` (wrist), and `leg-x-thigh` (hip) > `-shin` (knee) > `sandal-x` (ankle).
+  `upper-body` pivots at the pelvis and `head-stack` at the neck. +deg swings viewer-left limbs OUT and -deg swings viewer-right limbs out.
+- A 3/4 sleeve is two parts: the tube belongs to the upper arm and the bell belongs to the FOREARM (drawn over its top).
+  Otherwise a bent elbow tears the forearm out of the sleeve.
+- Boundman arms must be drawn in front of the inflated torso (`arms_front`).
+- Animation frames on every Gear: `eyes-open`/`eyes-closed`, `mouth-smile|grin|laugh|shout` (`v["mouth"]` picks the visible
+  one), `hat` (or `hat-back` when hatless), `hair`, and the nested arm chain. Ids replaced in ART-002: `shins`, `cuffs` and `sandals` were
+  split into `leg-r/l-thigh`, `leg-r/l-shin` and `sandal-r/l`. `sash`, `shorts`, `cardigan`, `torso`, `scar` and `x-scar` are unchanged.
+
 ### Gears (same rig, `GEARS` dict)
 - (G3) Swinging a full arm sideways leaves the 600x800 canvas, because the arm is about 285 long. Fix: shrink the whole pose with
   `art_t` (scale 0.62 about the soles) and raise the arm overhead (rotate 165), so the scaled fist fits above the head.

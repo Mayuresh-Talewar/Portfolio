@@ -216,6 +216,8 @@ def head_stack(p, v):
                        f'<circle fill="{p["iris"]}" cx="{x}" cy="{EYE_Y + 1}" r="3.7"/>' for x in (ex1, ex2))
         eyes += taper(f"M{ex1 - 13} {EYE_Y - 5} Q{ex1} {EYE_Y - 22} {ex1 + 13} {EYE_Y - 5}", 2.6)
         eyes += taper(f"M{ex2 + 13} {EYE_Y - 5} Q{ex2} {EYE_Y - 22} {ex2 - 13} {EYE_Y - 5}", 2.6)
+    closed = taper(f"M{ex1 - 13} {EYE_Y + 3} Q{ex1} {EYE_Y - 12} {ex1 + 13} {EYE_Y + 3} M{ex2 - 13} {EYE_Y + 3} Q{ex2} {EYE_Y - 12} {ex2 + 13} {EYE_Y + 3}", 3.6)
+    eyes = g("eyes-open", eyes) + g("eyes-closed", closed, extra=' style="display:none"')
     if v.get("brows"):
         eyes += taper(f"M{ex1 - 12} {EYE_Y - 22} L{ex1 + 12} {EYE_Y - 16}", 5) + taper(f"M{ex2 + 12} {EYE_Y - 22} L{ex2 - 12} {EYE_Y - 16}", 5)
     eyes += taper(f"M298 {NOSE_Y - 1} Q302 {NOSE_Y + 5} 307 {NOSE_Y + 2}", 2.2)
@@ -226,12 +228,14 @@ def head_stack(p, v):
             f'<path fill="{p["teeth"]}" d="M266 {m - 6.5} Q300 {m} 334 {m - 6.5} L332 {m + 1} Q300 {m + 6} 268 {m + 1} Z"/>'
             f'<path fill="{p["tongue"]}" d="M280 {m + 15} Q300 {m + 7} 320 {m + 15} Q300 {m + 20} 280 {m + 15} Z"/>' + taper(f"M267 {m + 1} Q300 {m + 6} 333 {m + 1}", 1.4))
     smile = taper(f"M268 {m - 3} Q300 {m + 13} 334 {m - 5}", 3.2) + taper(f"M265 {m - 6} L271 {m}", 1.8) + taper(f"M331 {m - 2} L337 {m - 8}", 1.8)
-    big = v.get("mouth") == "grin"
     teeth = (celh(f"M260 {m - 11} Q300 {m - 4} 340 {m - 11} Q338 {m + 17} 300 {m + 21} Q262 {m + 17} 260 {m - 11} Z", p["teeth"], None) +
              taper(f"M262 {m + 4} Q300 {m + 11} 338 {m + 4}", 1.6) + taper(" ".join(f"M{x} {m - 7 + abs(x - 300) * .1} L{x} {m + 17 - abs(x - 300) * .12}" for x in (274, 287, 300, 313, 326)), 1.2))
-    if v.get("teeth"): grin = teeth
-    mouth = g("face-mouth", g("mouth-grin", grin, extra="" if big else ' style="display:none"') +
-              g("mouth-smile", smile, extra=' style="display:none"' if big else ""))
+    shout = (celh(f"M276 {m - 8} Q300 {m - 14} 324 {m - 8} Q330 {m + 12} 300 {m + 26} Q270 {m + 12} 276 {m - 8} Z", p["mouth"]) +
+             f'<path fill="{p["teeth"]}" d="M280 {m - 7} Q300 {m - 11} 320 {m - 7} L318 {m - 2} Q300 {m - 5} 282 {m - 2} Z"/>'
+             f'<path fill="{p["tongue"]}" d="M286 {m + 18} Q300 {m + 10} 314 {m + 18} Q300 {m + 24} 286 {m + 18} Z"/>')
+    frames = dict(smile=smile, grin=teeth, laugh=grin, shout=shout)
+    show = v.get("mouth", "smile")
+    mouth = g("face-mouth", "".join(g("mouth-" + k, d, extra="" if k == show else ' style="display:none"') for k, d in frames.items()))
     hair = g("hair", v["hair"](p) if "hair" in v else celh(HAIR_D, p["hair"]) +
              taper("M226 170 Q220 182 210 188 M374 170 Q380 182 390 188 M224 128 Q212 126 204 132 M376 128 Q388 126 396 132", 2.6))
     hat = g("hat", '<g transform="translate(0 7) rotate(3 300 86)">' + celh(fray(300, 86, 124, 36), p["hat"], p["hatS"], 8) + f'<path class="t" d="{straw(300, 86, 124, 36)}"/>' +
@@ -400,7 +404,7 @@ def g5_bg(p):  # colour-climax burst (colour version only; hide #fx-climax for a
 
 def g2_steam(p):  # dense, overlapping, rising steam mass behind the body (seeded, so it is stable between builds)
     r = random.Random(42); items = []
-    for i in range(20):
+    for i in range(18):
         side = -1 if i % 2 else 1; y = 790 - i * 34 + r.uniform(-10, 10)
         x = 300 + side * r.uniform(110, 250) * (0.75 if y < 200 else 1)
         rx = r.uniform(30, 58); items.append((x, y, rx, rx * r.uniform(.6, .8), 9, i))
@@ -414,7 +418,7 @@ GEARS = {
     "g1": dict(head_t="rotate(-3)", upper_t="rotate(-1)",
                **{"arm-r": dict(all="rotate(7)", forearm="rotate(-10)"), "arm-l": dict(all="rotate(-5)", forearm="rotate(12)"),
                   "leg-r": dict(thigh="rotate(4)", shin="rotate(-3)"), "leg-l": dict(thigh="rotate(-3)", shin="rotate(2)")}),
-    "g2": dict(mouth="grin", teeth=True, brows=True, art_t="translate(0 64)", head_t="rotate(0)",
+    "g2": dict(mouth="grin", brows=True, art_t="translate(0 64)", head_t="rotate(0)",
                **{"arm-r": dict(all="rotate(10)", forearm="rotate(-28)"), "arm-l": dict(all="rotate(-10)", forearm="rotate(28)"),
                   "leg-r": dict(thigh="rotate(56)", shin="rotate(-60)", foot="rotate(4)"),
                   "leg-l": dict(thigh="rotate(-56)", shin="rotate(60)", foot="rotate(-4)")},
@@ -422,14 +426,14 @@ GEARS = {
                fx_back=g2_steam,
                fx_front=lambda p: puffs(p, [(244, 262, 30, 18, 9, 7), (358, 258, 32, 19, 9, 8), (230, 706, 34, 16, 9, 11)], id_="fx-steam-front") +
                g("fx-steam-lines", taper("M196 210 Q184 170 200 130 M404 200 Q418 160 402 120 M150 400 Q138 360 154 320 M452 390 Q466 350 450 310", 2.4))),
-    "g3": dict(mouth="grin", teeth=True, brows=True, giant_fist=True, art_t="translate(372 770) scale(0.58) translate(-300 -760)",
+    "g3": dict(mouth="grin", brows=True, giant_fist=True, art_t="translate(372 770) scale(0.58) translate(-300 -760)",
                upper_t="rotate(-14)", head_t="rotate(-8)",
                css='<style>#arm-r-fist path,#arm-r-forearm path{vector-effect:non-scaling-stroke}</style>',
                **{"arm-r": dict(all="rotate(138)", forearm="rotate(-14) scale(1.4 1)", fist="scale(7.5)"),
                   "arm-l": dict(all="rotate(-38)", forearm="rotate(-70)"),
                   "leg-r": dict(thigh="rotate(26)", shin="rotate(-16)"), "leg-l": dict(thigh="rotate(-8)", shin="rotate(24)")},
                fx_front=lambda p: g("fx-impact", taper("M60 120 L120 170 M40 260 L118 270 M120 30 L160 110 M420 60 L370 130 M470 200 L400 230", 3))),
-    "g4": dict(mouth="grin", teeth=True, brows=True, haki=True, no_sleeves=True, no_cardigan=True, no_hat=True, hair=g4_hair,
+    "g4": dict(mouth="shout", brows=True, haki=True, no_sleeves=True, no_cardigan=True, no_hat=True, hair=g4_hair,
                art_t="translate(0 -24)", head_t="rotate(4)", upper_t="rotate(3)",
                hair_back="M240 100 L222 160 L244 150 L250 168 L350 168 L356 150 L378 160 L360 100 Z",
                torso="M290 212 C250 214 214 222 206 252 C200 300 206 380 238 440 L362 440 C394 380 400 300 394 252 C386 222 350 214 310 212 Z",
@@ -443,7 +447,7 @@ GEARS = {
                                                           "M220 300 Q236 324 226 352 M380 300 Q364 324 374 352 M266 238 Q280 252 276 270 M334 238 Q320 252 324 270", 9, p["flame"])) +
                g("fx-steam-scarf", cel(ribbon([(176, 286), (196, 244), (240, 214), (300, 204), (360, 214), (404, 244), (424, 286)],
                                                [3, 6, 7, 6, 7, 6, 3], 0.7), p["steam"], p["steamS"], 3, w=1.6, extra=' opacity=".75"'))),
-    "g5": dict(mouth="grin", eyes="g5", no_hat=True, hair=g5_hair,
+    "g5": dict(mouth="laugh", eyes="g5", no_hat=True, hair=g5_hair,
                art_t="translate(300 760) scale(0.84) translate(-300 -760) translate(0 -70)", upper_t="rotate(-9)", head_t="rotate(-10)",
                **{"arm-r": dict(all="rotate(160)", forearm="rotate(-55)"), "arm-l": dict(all="rotate(-78)", forearm="rotate(-55)"),
                   "leg-r": dict(thigh="rotate(72)", shin="rotate(-105)", foot="rotate(10)"),
