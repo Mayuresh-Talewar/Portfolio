@@ -1,4 +1,4 @@
-import type { Chapter, Part, Stat } from "@/types";
+import type { Chapter, CoverPart, FinalePart, Part, Stat } from "@/types";
 
 // Headline impact stats (Crestline Intelligence, per the resume).
 export const stats: Stat[] = [
@@ -15,6 +15,13 @@ export const chapters: Chapter[] = [
     number: 1,
     gear: 1,
     gearName: "Gear 1",
+    arcTitle: "Gear 1: The Hometown Arc",
+    narration: [
+      "Nagpur, 2018. I picked computer engineering and never looked back.",
+      "Three years later: a diploma, a 75% score, and an itch to build.",
+    ],
+    gearCaption: "Gear 1, rubber basics: I stretched into programming fundamentals.",
+    sfx: [{ text: "BOING", kana: "ビヨーン" }],
     title: "The Beginning",
     subtitle: "Diploma, Anjuman Polytechnic",
     period: "2018 – 2021",
@@ -30,6 +37,13 @@ export const chapters: Chapter[] = [
     number: 2,
     gear: 2,
     gearName: "Gear 2",
+    arcTitle: "Gear 2: The Academy Arc",
+    narration: [
+      "Four years of B.Tech CSE at G H Raisoni. Late nights, real builds.",
+      "I graduated in 2024 with a 7.89 CGPA and a full toolbox.",
+    ],
+    gearCaption: "Gear 2, pure speed: CS fundamentals that let me ship fast.",
+    sfx: [{ text: "SHUUU", kana: "シュー" }],
     title: "Academy Arc",
     subtitle: "B.Tech CSE, G H Raisoni University",
     period: "2021 – 2024",
@@ -45,6 +59,13 @@ export const chapters: Chapter[] = [
     number: 3,
     gear: 3,
     gearName: "Gear 3",
+    arcTitle: "Gear 3: The First Quest Arc",
+    narration: [
+      "Pune, 2024. My first crew and my first production MERN codebase.",
+      "I secured 15+ routes and guided 4 juniors, all as an intern.",
+    ],
+    gearCaption: "Gear 3, giant scale: I went from components to full-stack modules.",
+    sfx: [{ text: "BOOOM", kana: "ドーン" }],
     title: "First Quest",
     subtitle: "Full Stack Developer Intern, Technology World Creater",
     period: "Mar 2024 – Aug 2024",
@@ -70,6 +91,13 @@ export const chapters: Chapter[] = [
     number: 4,
     gear: 4,
     gearName: "Gear 4",
+    arcTitle: "Gear 4: The Blade Forge Arc",
+    narration: [
+      "Back in Nagpur at Softtronix, I sharpened my frontend edge.",
+      "4+ client projects, ~25% faster pages, 60% more inquiries for one client.",
+    ],
+    gearCaption: "Gear 4, bounce and power: polished React that loads fast and lands hard.",
+    sfx: [{ text: "BOYOYON", kana: "ボヨヨン" }],
     title: "Forging the Blade",
     subtitle: "Frontend Developer, Softtronix",
     period: "Sep 2024 – Jul 2025",
@@ -94,6 +122,13 @@ export const chapters: Chapter[] = [
     number: 5,
     gear: 5,
     gearName: "Gear 5",
+    arcTitle: "Gear 5: The AI Awakening Arc",
+    narration: [
+      "Then the panels burst into color. I started building AI products.",
+      "Agents, RAG and real platforms at Crestline. Follow-up work cut ~50%.",
+    ],
+    gearCaption: "Gear 5, total freedom: turning LLMs into products people actually use.",
+    sfx: [{ text: "DON DON", kana: "ドンドン" }, { text: "BA-DUM" }],
     title: "The AI Arc",
     subtitle: "Full Stack Developer, Crestline Intelligence",
     period: "Aug 2025 – Present",
@@ -135,6 +170,12 @@ export const chapters: Chapter[] = [
 // Non-chapter parts of the volume (design spec §1 / §6).
 export const parts = {
   cover: {
+    tagline: "Five chapters, five Gears. From first Hello World to shipping AI.",
+    wanted: {
+      bountyLabel: "Bounty: 3+ production apps shipped",
+      epithet: "The AI Shipwright",
+      notice: "Wanted on your team. Brings agents, RAG and clean code.",
+    },
     id: "cover",
     title: "Vol. 1: Mayuresh Talewar",
     colorMode: "color",
@@ -151,17 +192,31 @@ export const parts = {
     title: "Side Stories",
     colorMode: "color",
     guide: { pose: "04-point", line: "Side stories. All live. Go poke them." },
+    intro: "Side quests from the voyage. Every one is live, so take a look.",
   },
   status: {
     id: "status-window",
     title: "Status Window",
     colorMode: "night",
     guide: { pose: "05-think", line: "My stats. No fake percentages, just what I use." },
+    intro: "The status screen. Real skills from real projects, no power-level guesses.",
   },
   finale: {
     id: "finale",
     title: "To Be Continued...",
     colorMode: "color",
     guide: { pose: "06-wave-bye", line: "To be continued… the next chapter is written with you." },
+    toBeContinued: "To be continued… The next arc needs a crew.",
+    cta: {
+      heading: "Looking for your next crewmate?",
+      body: "Building with AI or full stack? Let's set sail together.",
+      label: "Send me a message",
+    },
   },
-} satisfies Record<string, Part>;
+} satisfies {
+  cover: CoverPart;
+  breakOut: Part;
+  gaiden: Part;
+  status: Part;
+  finale: FinalePart;
+};

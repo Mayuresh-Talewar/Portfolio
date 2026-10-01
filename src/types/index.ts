@@ -39,7 +39,24 @@ export type Part = {
   title: string;
   colorMode: ColorMode;
   guide: Guide;
+  /** Short narrator intro line (Gaiden, Status Window). */
+  intro?: string;
 };
+
+/** Cover extras: tagline + wanted-poster copy. */
+export type CoverPart = Part & {
+  tagline: string;
+  wanted: { bountyLabel: string; epithet: string; notice: string };
+};
+
+/** Finale extras: closing line + contact CTA copy. */
+export type FinalePart = Part & {
+  toBeContinued: string;
+  cta: { heading: string; body: string; label: string };
+};
+
+/** Manga sound effect: Latin text plus optional katakana. */
+export type Sfx = { text: string; kana?: string };
 
 export type Product = { title: string; description: string };
 
@@ -48,6 +65,14 @@ export type Chapter = Part & {
   /** Career power-up level (Luffy's Gears concept). */
   gear: 1 | 2 | 3 | 4 | 5;
   gearName: string;
+  /** One Piece-style arc name, e.g. "Gear 2: The Academy Arc". */
+  arcTitle: string;
+  /** Two narrator caption-box lines. */
+  narration: [string, string];
+  /** What this Gear's power-up maps to in real skills. */
+  gearCaption: string;
+  /** SFX for the Gear-up moment. */
+  sfx: Sfx[];
   /** Plain label shown next to the flavor title, e.g. "Frontend Developer, Softtronix". */
   subtitle: string;
   period: string;
