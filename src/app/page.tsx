@@ -4,12 +4,13 @@ import { projects } from "@/data/projects";
 import { siteConfig } from "@/data/site";
 import { skills } from "@/data/skills";
 import { ChapterHeader } from "@/components/chapter-header";
-import { ChapterNav, type NavItem } from "@/components/chapter-nav";
+import { ChapterNav, ShipMark, type NavItem } from "@/components/chapter-nav";
 import { ChapterSpread } from "@/components/chapter-spread";
 import { ContactForm } from "@/components/contact-form";
 import { Eyecatch } from "@/components/eyecatch";
 import { GaidenStrip } from "@/components/motion/gaiden-strip";
 import { RouteDraw } from "@/components/motion/route-draw";
+import { Ambient } from "@/components/motion/ambient";
 import { Intro } from "@/components/motion/intro";
 import { ProjectCard } from "@/components/project-card";
 import { Section } from "@/components/section";
@@ -50,6 +51,7 @@ export default function Home() {
         Skip to contents
       </a>
       <Intro />
+      <Ambient />
       <ChapterNav items={contents} resume={siteConfig.resume} />
 
       <main className="flex-1">
@@ -116,7 +118,7 @@ export default function Home() {
         <nav
           id="contents"
           aria-labelledby="contents-title"
-          className="parchment relative scroll-mt-28 overflow-hidden border-b-[3px] border-ink px-3 py-14 md:scroll-mt-16 md:px-8 md:py-20"
+          className="parchment relative scroll-mt-16 overflow-hidden border-b-[3px] border-ink px-3 py-10 md:scroll-mt-16 md:px-8 md:py-20"
         >
           <div aria-hidden className="chart-grid absolute inset-0" />
           <Compass className="absolute -right-16 -bottom-20 w-72 opacity-25 md:right-10 md:bottom-6 md:w-80" />
@@ -129,12 +131,12 @@ export default function Home() {
             </p>
             <div className="relative mt-10 md:mt-14">
               <RouteDraw d={route} className="absolute inset-x-0 top-[3.25rem] hidden h-[12.5rem] w-full md:block" />
-              <ol className="relative grid gap-4 border-l-[3px] border-dashed border-sea/60 pl-5 md:grid-cols-8 md:gap-3 md:border-0 md:pl-0">
+              <ol className="relative -mx-3 flex snap-x snap-mandatory scroll-px-3 gap-3 overflow-x-auto px-3 pt-1 pb-3 md:mx-0 md:grid md:grid-cols-8 md:overflow-visible md:p-0">
                 {islands.map((isl, i) => (
-                  <li key={isl.id} className={cn("relative", i % 2 && "md:mt-[7.5rem]")}>
+                  <li key={isl.id} className={cn("relative w-[42vw] shrink-0 snap-start md:w-auto", i % 2 && "md:mt-[7.5rem]")}>
                     <a
                       href={`#${isl.id}`}
-                      className="group flex flex-col border-[3px] border-ink bg-paper p-3 transition-transform duration-200 hover:-translate-y-1 md:items-center md:text-center"
+                      className="group flex h-full flex-col border-[3px] border-ink bg-paper p-3 transition-transform duration-200 hover:-translate-y-1 md:items-center md:text-center"
                       style={{ borderRadius: i % 2 ? "28px 10px 30px 8px" : "10px 30px 8px 28px" }}
                     >
                       <span
@@ -181,7 +183,7 @@ export default function Home() {
               <div
                 key={p.id}
                 id={`project-${p.id}`}
-                className={cn("gaiden-card w-full shrink-0 scroll-mt-28 md:snap-start", p.spread ? "md:w-[min(84vw,1000px)]" : "md:w-[min(74vw,480px)]")}
+                className={cn("gaiden-card w-[84vw] shrink-0 snap-start scroll-mt-16", p.spread ? "md:w-[min(84vw,1000px)]" : "md:w-[min(74vw,480px)]")}
               >
                 <ProjectCard project={p} index={i} />
               </div>
@@ -221,10 +223,11 @@ export default function Home() {
         {/* ───────── FINALE ───────── */}
         <Section
           part={finale}
-          className="border-b-0 bg-jolly! text-paper [&_:focus-visible]:outline-straw"
+          className="border-b-0 bg-jolly! pb-28 text-paper md:pb-36 [&_:focus-visible]:outline-straw"
           backdrop={
             <div aria-hidden className="absolute inset-0 -z-10">
               <div className="speedlines absolute -inset-1/4 opacity-20" style={{ "--lines": "#fbf7ee", "--sx": "30%", "--sy": "30%" } as React.CSSProperties} />
+              <Sea ship />
             </div>
           }
         >
@@ -265,10 +268,21 @@ export default function Home() {
               </div>
             </div>
           </div>
-          <div className="mt-16 flex justify-end">
-            <span aria-hidden className="sfx inline-flex items-center bg-ink px-6 py-3 text-[clamp(1.6rem,4vw,2.6rem)] [--sfx-fill:var(--color-straw)] [clip-path:polygon(0_0,calc(100%-1.4em)_0,100%_50%,calc(100%-1.4em)_100%,0_100%)] pr-[1.8em]">
+          {/* Anime end card: the "next arc" arrow wipes in, DON! lands on the beat, then the volume closes. */}
+          <div data-cue aria-hidden className="mt-12 flex flex-col items-end gap-4 md:mt-16">
+            <div className="relative">
+              <span className="tbc-don sfx absolute -top-[0.7em] -left-[0.9em] z-10 -rotate-12 text-[clamp(2.2rem,5.5vw,3.8rem)] [--sfx-fill:var(--color-paper)]">
+                DON!
+              </span>
+              <div className="tbc-wipe">
+                <span className="sfx inline-flex items-center bg-ink px-6 py-3 pr-[1.8em] text-[clamp(1.6rem,4vw,2.6rem)] [--sfx-fill:var(--color-straw)] [clip-path:polygon(0_0,calc(100%-1.4em)_0,100%_50%,calc(100%-1.4em)_100%,0_100%)]">
+                  Next arc
+                </span>
+              </div>
+            </div>
+            <p className="tbc-end ribbon text-sm md:text-base" style={{ "--ribbon-bg": "var(--color-ink)", "--ribbon-fg": "var(--color-paper)" } as React.CSSProperties}>
               End of Vol. 1
-            </span>
+            </p>
           </div>
         </Section>
       </main>
@@ -282,13 +296,37 @@ export default function Home() {
 function CoverArt() {
   return (
     <div aria-hidden className="absolute inset-0 -z-10 bg-paper">
-      <div className="rays absolute inset-0" style={{ "--ray-a": "#f8e4a6", "--ray-b": "#fbf3dc", "--sx": "76%", "--sy": "42%" } as React.CSSProperties} />
+      {/* Rays turn slowly around the poster: one oversized square rotating (transform only), paused offscreen. */}
+      <div data-live className="absolute inset-0 overflow-hidden">
+        <div className="rays rays-spin" style={{ "--ray-a": "#f8e4a6", "--ray-b": "#fbf3dc", "--sx": "50%", "--sy": "50%", left: "76%", top: "42%" } as React.CSSProperties} />
+      </div>
       <div className="chart-grid absolute inset-0 opacity-60" />
       <Compass className="absolute -top-10 -left-24 w-[26rem] opacity-[0.12]" />
-      <svg viewBox="0 0 1440 120" preserveAspectRatio="none" className="absolute inset-x-0 bottom-0 h-16 w-full md:h-24">
+      <Sea />
+    </div>
+  );
+}
+
+// One 360-unit swell repeated; 2880 wide so a -50% drift (1440 = 4 swells) loops seamlessly.
+const swell = (y: number, lift: number, from = 0) =>
+  `M${from} ${y} Q${from + 90} ${y - lift} ${from + 180} ${y}` + Array.from({ length: 15 }, (_, i) => ` T${from + 360 + i * 180} ${y}`).join("");
+
+/** The sea strip along a section's bottom edge: a back swell and foam drift; the front swell holds still. */
+function Sea({ ship = false }: { ship?: boolean }) {
+  return (
+    <div data-live className="absolute inset-x-0 bottom-0 h-16 md:h-24">
+      <svg viewBox="0 0 1440 120" preserveAspectRatio="none" className="absolute inset-0 size-full">
+        <path className="sea-drift" style={{ animationDuration: "16s" }} d={`${swell(42, 36, -180)} V120 H-180Z`} fill="#13679f" stroke="#1a1612" strokeWidth="3" />
         <path d="M0 50 Q90 15 180 50 T360 50 T540 50 T720 50 T900 50 T1080 50 T1260 50 T1440 50 V120 H0Z" fill="#0f5c93" stroke="#1a1612" strokeWidth="4" />
-        <path d="M0 80 Q90 55 180 80 T360 80 T540 80 T720 80 T900 80 T1080 80 T1260 80 T1440 80" fill="none" stroke="#9fd8f2" strokeWidth="3" strokeDasharray="30 22" />
+        <path className="sea-drift" d={swell(80, 25)} fill="none" stroke="#9fd8f2" strokeWidth="3" strokeDasharray="24 24" />
       </svg>
+      {ship && (
+        <div className="ship-sail absolute bottom-[58%] left-0 w-12 md:w-20">
+          <div className="ship-bob">
+            <ShipMark />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

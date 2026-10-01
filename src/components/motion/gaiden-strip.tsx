@@ -5,7 +5,7 @@ import { gsap, MQ, useGSAP } from "@/lib/gsap";
 
 /**
  * Cookbook §9e: desktop + motion OK = pinned horizontal strip scrubbed by vertical scroll.
- * Otherwise a native snap row (desktop) or a vertical stack (mobile).
+ * Otherwise a native snap row (desktop) or a swipe row (mobile: no pin, ~2.5k px shorter than a stack).
  * Children: one `.gaiden-card` per project.
  */
 export function GaidenStrip({ children }: { children: ReactNode }) {
@@ -38,8 +38,8 @@ export function GaidenStrip({ children }: { children: ReactNode }) {
     { scope: root },
   );
   return (
-    <div ref={root} className="-mx-3 overflow-x-auto px-3 pb-4 md:mx-0 md:snap-x md:snap-mandatory md:px-0">
-      <div className="gaiden-track flex flex-col gap-5 md:w-max md:flex-row md:items-stretch md:gap-6 md:pr-8">{children}</div>
+    <div ref={root} className="-mx-3 snap-x snap-mandatory scroll-px-3 overflow-x-auto px-3 pt-2 pb-4 md:mx-0 md:scroll-px-0 md:px-0">
+      <div className="gaiden-track flex w-max items-stretch gap-4 pr-3 md:gap-6 md:pr-8">{children}</div>
     </div>
   );
 }

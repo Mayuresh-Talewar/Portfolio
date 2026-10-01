@@ -24,7 +24,7 @@ export function Section({
       data-chapter={part.id}
       data-mode={part.colorMode}
       aria-labelledby={labelledBy}
-      className={cn("relative isolate scroll-mt-28 overflow-hidden border-b-[3px] border-ink px-3 py-14 md:scroll-mt-16 md:px-8 md:py-20", className)}
+      className={cn("relative isolate scroll-mt-16 overflow-hidden border-b-[3px] border-ink px-3 py-10 md:px-8 md:py-20", className)}
       {...data}
     >
       {backdrop}
