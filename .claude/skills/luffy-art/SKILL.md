@@ -123,6 +123,15 @@ is on the chest; the shorts have fluffy cuffs; the sandals are thong straps.
 - G4: haki limbs get their own bulging bicep/forearm paths, so the arm reads as muscle, not as a horizontally scaled tube. Flame tattoos are
   filled curled tongues on the chest SIDES; slash strokes read as claw marks.
 
+### ART-003 round 2 lessons
+- G3 balloon arm: inflate the SLEEVE and forearm a little (1.5 and 1.7), and keep the fist the dominant mass (x6.8). A 2.6x forearm swallowed the
+  fist into a "baguette". A giant fist only reads as a fist with DISTINCT finger rolls (bump amplitude about 7 local) plus a thumb pad.
+- If the hat is posed off the head (`hat_t`), add a hair cap over the crown, otherwise the head shows a bald dome.
+- Torso twist without a 3D rig: `skewX(-8) scale(0.94 1)` on `upper-body` foreshortens convincingly enough.
+- Steam glow and vents: a translucent fill (opacity about .55) plus a thin tapered centre line. Solid inked ribbons read as white bones or snakes.
+- Size budget: cloud ink sampling step 22 and 7-point clouds keep G2 under 150 KB. Check with `ls` after every build.
+- Bigger eyes (rx 14.5, ry 16.5 in the head frame) moved G1 noticeably closer to the ref, after the head was scaled down to 0.67.
+
 ### Gears (same rig, `GEARS` dict)
 - (G3) Swinging a full arm sideways leaves the 600x800 canvas, because the arm is about 285 long. Fix: shrink the whole pose with
   `art_t` (scale 0.62 about the soles) and raise the arm overhead (rotate 165), so the scaled fist fits above the head.
