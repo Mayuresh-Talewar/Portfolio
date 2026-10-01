@@ -22,13 +22,13 @@ export function ChapterSpread({ chapter: c, projects }: { chapter: Chapter; proj
 
   const record = (
     <article data-panel className={cn("panel p-5 md:p-7", !thin && "col-span-12", !thin && (c.metrics ? "md:col-span-8" : "md:col-span-12"), flip && !thin && "md:col-start-5")}>
-      <h3 className="font-display text-xl leading-tight uppercase md:text-2xl">{c.role}</h3>
-      <p className="mt-1 font-bold [font-stretch:85%]" style={{ color: "var(--spot-text)" }}>
+      <h3 className="font-display text-h3 leading-[1.05] uppercase text-balance">{c.role}</h3>
+      <p className="mt-2 font-bold [font-stretch:85%]" style={{ color: "var(--spot-text)" }}>
         {c.org}, {c.location}
       </p>
-      <ul className={cn("mt-4 grid max-w-[72ch] gap-3", !thin && !c.metrics && "max-w-none md:grid-cols-2 md:gap-x-10")}>
+      <ul className={cn("mt-5 max-w-[62ch] space-y-3", c.highlights.length > 3 ? "md:max-w-none md:columns-2 md:gap-x-10" : !thin && !c.metrics && "md:grid md:max-w-none md:grid-cols-2 md:gap-x-10 md:gap-y-3 md:space-y-0")}>
         {c.highlights.map((h) => (
-          <li key={h} className="relative pl-6 leading-relaxed">
+          <li key={h} className="relative break-inside-avoid pl-6">
             <span aria-hidden className="absolute top-[0.55em] left-0 size-2.5 rotate-45" style={{ background: "var(--spot)" }} />
             {h}
           </li>
@@ -109,56 +109,54 @@ export function ChapterSpread({ chapter: c, projects }: { chapter: Chapter; proj
           style={{ "--panel-bg": climax ? "var(--color-straw)" : "var(--color-paper)" } as React.CSSProperties}
         >
           <ArrivalFx gear={c.gear} />
+          {/* Object splash (no figure): a halftone gradient and speedlines that converge on the SFX word. */}
           <div aria-hidden className="pointer-events-none absolute inset-[3px] overflow-hidden">
             <div
               data-lines
-              className="speedlines absolute -inset-1/4 opacity-[0.16]"
-              style={{ "--sx": flip ? "28%" : "72%", "--sy": "30%", "--lines": climax ? "var(--color-jolly)" : "var(--spot)" } as React.CSSProperties}
+              className="speedlines absolute -inset-1/4 opacity-[0.22]"
+              style={{ "--sx": flip ? "22%" : "78%", "--sy": "26%", "--lines": climax ? "var(--color-jolly)" : "var(--spot)" } as React.CSSProperties}
             />
-            <div className="tone tone-fade absolute inset-x-0 top-0 h-2/3 opacity-[0.14]" />
+            <div className="tone splash-tone absolute inset-0 opacity-[0.2]" style={{ "--tone-at": flip ? "15% 20%" : "85% 20%" } as React.CSSProperties} />
+          </div>
+
+          {climax ? (
+            // Ch.5 already gets its SFX in the Gear 5 splash above; its title panel keeps the outlined numeral.
             <span
-              data-numeral
-              className={cn(
-                "absolute -top-[0.12em] font-display text-[clamp(14rem,34vw,30rem)] leading-none text-transparent [-webkit-text-stroke:3px_var(--color-ink)]",
-                "-left-[0.04em]",
-              )}
-              style={{ opacity: 0.13 }}
+              aria-hidden
+              className="pointer-events-none absolute -top-[0.12em] -left-[0.04em] font-display text-[clamp(14rem,34vw,30rem)] leading-none text-transparent opacity-[0.13] [-webkit-text-stroke:3px_var(--color-ink)]"
             >
               {c.number}
             </span>
-          </div>
-
-          {!climax && c.sfx && c.sfx.length > 0 && (
-            <div
-              aria-hidden
-              data-sfx
-              className={cn(
-                "pointer-events-none absolute top-[7%] flex items-start gap-2",
-                flip ? "right-[6%] -rotate-[7deg]" : "right-[5%] rotate-[8deg]",
-              )}
-            >
-              <div className="flex flex-col items-end gap-1">
-                {c.sfx.map((s) => (
+          ) : (
+            c.sfx[0] && (
+              <div
+                aria-hidden
+                data-sfx
+                className={cn(
+                  // Static tilt on the wrapper only: GSAP transforms the .sfx inside (skill lesson 4).
+                  // Bleeds off the top and outer edge so the panel crops it like a splash.
+                  "pointer-events-none absolute -top-[0.06em] flex items-start gap-[0.06em] text-[clamp(7.5rem,19vw,16rem)]",
+                  flip ? "-left-[0.18em] rotate-[8deg]" : "-right-[0.18em] flex-row-reverse -rotate-[8deg]",
+                )}
+              >
+                <span
+                  className="sfx block"
+                  style={{ "--sfx-fill": c.gear >= 3 ? "var(--color-jolly)" : "var(--color-paper)", textShadow: "0.04em 0.05em 0 var(--color-ink)" } as React.CSSProperties}
+                >
+                  {c.sfx[0].text}
+                </span>
+                {c.sfx[0].kana && <span className="kana mt-[0.85em] text-[0.2em] leading-none">{c.sfx[0].kana}</span>}
+                {/* steam puffs for the gear-up */}
+                {[0, 1, 2, 3].map((n) => (
                   <span
-                    key={s.text}
-                    className="sfx block text-[clamp(3.6rem,10vw,7.5rem)]"
-                    style={{ "--sfx-fill": c.gear >= 3 ? "var(--color-jolly)" : climax ? "var(--color-jolly)" : "var(--color-paper)" } as React.CSSProperties}
-                  >
-                    {s.text}
-                  </span>
+                    key={n}
+                    data-puff
+                    className="absolute size-10 rounded-full border-[3px] border-ink bg-paper opacity-0"
+                    style={{ left: `${30 + n * 12}%`, top: `${40 + (n % 2) * 18}%` }}
+                  />
                 ))}
               </div>
-              {c.sfx[0]?.kana && <span className="kana text-[clamp(1.6rem,3.6vw,2.8rem)] leading-none">{c.sfx.map((s) => s.kana).join("")}</span>}
-              {/* steam puffs for the gear-up */}
-              {[0, 1, 2, 3].map((n) => (
-                <span
-                  key={n}
-                  data-puff
-                  className="absolute size-10 rounded-full border-[3px] border-ink bg-paper opacity-0"
-                  style={{ left: `${10 + n * 22}%`, top: `${60 + (n % 2) * 18}%` }}
-                />
-              ))}
-            </div>
+            )
           )}
 
           <ChapterHeader
@@ -189,7 +187,7 @@ export function ChapterSpread({ chapter: c, projects }: { chapter: Chapter; proj
               key={line}
               data-caption
               className={cn(
-                "caption text-[0.95rem] md:text-base",
+                "caption",
                 i % 2 ? "md:rotate-[0.8deg]" : "md:-rotate-[0.8deg]",
                 flip ? (i % 2 ? "md:-mr-6" : "md:-mr-16") : i % 2 ? "md:-ml-6" : "md:-ml-16",
               )}
@@ -199,7 +197,7 @@ export function ChapterSpread({ chapter: c, projects }: { chapter: Chapter; proj
           ))}
           {c.gearCaption && !climax && (
             <div data-caption className="mt-2 flex items-end gap-3">
-              <p className="bubble flex-1 text-[0.95rem]">{c.gearCaption}</p>
+              <p className="bubble flex-1">{c.gearCaption}</p>
               <span
                 aria-hidden
                 className="shrink-0 font-display text-[3.4rem] leading-[0.8] uppercase [-webkit-text-stroke:2px_var(--color-ink)] [paint-order:stroke_fill]"
@@ -234,8 +232,8 @@ export function ChapterSpread({ chapter: c, projects }: { chapter: Chapter; proj
                   className={cn("panel flex flex-col gap-3 p-5 md:p-7", l.span)}
                   style={{ "--panel-bg": l.bg, "--panel-fg": l.fg } as React.CSSProperties}
                 >
-                  <h3 className="font-display text-2xl leading-none uppercase md:text-3xl">{p.title}</h3>
-                  <p className="leading-relaxed">{p.description}</p>
+                  <h3 className="font-display text-h3 leading-none uppercase">{p.title}</h3>
+                  <p className="max-w-[62ch]">{p.description}</p>
                 </li>
               );
             })}

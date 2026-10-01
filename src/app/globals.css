@@ -361,3 +361,32 @@ section[data-mode] {
     --cut: 1.25rem;
   }
 }
+
+/* ========== DEV-A: type scale + object splash (docs/11 #1, #2) ========== */
+@theme {
+  --text-display: clamp(3rem, 7vw, 6.5rem);
+  --text-display--line-height: 0.92;
+  --text-h2: clamp(2.4rem, 5vw, 4.5rem);
+  --text-h2--line-height: 0.95;
+  --text-h3: clamp(1.5rem, 2.4vw, 2.1rem);
+  --text-h3--line-height: 1.05;
+}
+body {
+  font-size: 1.0625rem;
+  line-height: 1.65;
+}
+@layer components {
+  .caption,
+  .bubble {
+    font-size: 1.05rem;
+    line-height: 1.3;
+  }
+  .caption {
+    letter-spacing: 0.03em;
+  }
+  /* Halftone that fades away from the splash subject (--tone-at). */
+  .splash-tone {
+    mask-image: radial-gradient(70% 75% at var(--tone-at, 80% 20%), #000, transparent 75%);
+  }
+}
+/* ========== /DEV-A ========== */
